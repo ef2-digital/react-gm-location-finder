@@ -1,0 +1,48 @@
+import { GoogleMap } from '@react-google-maps/api';
+import { classNamesTailwind } from '../../utils/helpers';
+import { useContext, useEffect } from 'react';
+import { useGoogleMapApi } from '../../hooks/useGoogleMapApi';
+import {
+  BOUNDS_NETHERLANDS,
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+} from '../../utils/constants';
+import { SettingContext } from '../../contexts/settingContext';
+import { Props } from '..';
+
+const Map = ({ children }: Props) => {
+    const { classNames, mapConfig } = useContext(SettingContext);
+    const { loadMap, handleOnMapIdle } = useGoogleMapApi();
+    const {
+        defaultBounds = BOUNDS_NETHERLANDS,
+        defaultCenter = DEFAULT_CENTER,
+        defaultZoom = DEFAULT_ZOOM,
+        maxZoom = 16,
+        minZoom = 8,
+        styles
+    } = mapConfig ?? {};
+
+    return (
+        <GoogleMap
+            onLoad={loadMap}
+            mapContainerClassName={classNamesTailwind('w-full relative z-0 h-[60vh] min-h-[25rem] md:h-screen', classNames?.map)}
+            zoom={defaultZoom}
+            center={defaultCenter}
+            onIdle={handleOnMapIdle}
+            options={{
+                maxZoom: maxZoom,
+                minZoom: minZoom,
+                restriction: {
+                    latLngBounds: defaultBounds
+                },
+                mapTypeControl: false,
+                styles: styles,
+                disableDoubleClickZoom: true
+            }}
+        >
+            {children}
+        </GoogleMap>
+    );
+};
+
+export default Map;
