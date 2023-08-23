@@ -1,7 +1,7 @@
 {
     "name": "@ef2/react-gm-location-finder",
     "private": false,
-    "version": "0.0.2",
+    "version": "0.0.3",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -11,10 +11,10 @@
     },
     "peerDependencies": {
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "@react-google-maps/api": "^2.19.2"
     },
     "devDependencies": {
-        "@react-google-maps/api": "^2.19.2",
         "@types/node": "^18.7.6",
         "@types/react": "^18.2.15",
         "@types/react-dom": "^18.2.7",
@@ -27,8 +27,6 @@
         "eslint-plugin-react-refresh": "^0.4.3",
         "lodash-es": "^4.17.21",
         "prettier": "^2.7.1",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
         "typescript": "^5.0.2",
         "vite": "^4.4.5",
         "vite-plugin-dts": "^1.4.1",
