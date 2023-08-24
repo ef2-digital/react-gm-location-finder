@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { LocationFinderContext, LocationProps, OpeningHoursDaysDayType } from '../contexts/locationFinderContext';
+import { LocationFinderContext, LocationProps } from '../contexts/locationFinderContext';
 import { useDistances } from './useDistances';
 import { notNull } from '../utils/helpers';
 import { useOpeningHours } from './useOpeningHours';
@@ -31,9 +31,30 @@ export const useLocations = () => {
     };
 
     // format locations for correct format
-    const setLocationFinderFormat = (locations: any, baseUrl: string): LocationProps => {
+    const setLocationFinderFormat = (locations: any, baseUrl: string): LocationProps[] => {
         return locations.map((location: any) => {
             const days = location.days?.filter(notNull);
+            let weekDays = [];
+
+            const openingHours =
+                days && Boolean(days.length)
+                    ? {
+                          //@ts-ignore
+                          days: days.map((day) => {
+                              const weekDay = dayMap.get(day.day);
+                              if (typeof weekDay !== 'undefined') {
+                                  return (weekDays[weekDay] = {
+                                      closed: day.closed,
+                                      slots:
+                                          day.slots?.filter(notNull).map((slot: any) => ({
+                                              from: formatTime(slot.from),
+                                              to: formatTime(slot.to)
+                                          })) ?? []
+                                  });
+                              }
+                          })
+                      }
+                    : {};
 
             return {
                 city: location.city,
@@ -47,27 +68,8 @@ export const useLocations = () => {
                 phone: location.phone,
                 email: location.email,
                 image: location.image?.data?.attributes ? [`${baseUrl}${location.image.data.attributes.url}?resize=800x400`] : undefined,
-                openingHours:
-                    days && Boolean(days.length)
-                        ? {
-                              days: days.reduce(({ a, c }: { a: any; c: any }) => {
-                                  const day = dayMap.get(c.day);
-
-                                  if (day) {
-                                      a[day] = {
-                                          closed: c.closed,
-                                          slots:
-                                              c.slots?.filter(notNull).map((slot: any) => ({
-                                                  from: formatTime(slot.from),
-                                                  to: formatTime(slot.to)
-                                              })) ?? []
-                                      };
-                                  }
-
-                                  return a;
-                              }, {} as { [key: number]: OpeningHoursDaysDayType })
-                          }
-                        : undefined
+                openingHours: openingHours,
+                attributes: location.attributes ?? {}
             };
         });
     };

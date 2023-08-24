@@ -12,7 +12,7 @@ export interface LocationProps {
     image?: string[];
     phone?: string;
     email?: string;
-    attributes?: { [key: string]: string[] };
+    attributes?: { [key: string]: string };
 }
 
 export interface OpeningHoursType {

@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import * as packageJson from './package.json';
+import { PluginPure } from 'rollup-plugin-pure';
 
 // https://vitejs.dev/config/
 export default defineConfig((configEnv) => ({
@@ -12,6 +13,10 @@ export default defineConfig((configEnv) => ({
         tsConfigPaths(),
         dts({
             rollupTypes: true
+        }),
+        PluginPure({
+            functions: ['defineComponent'],
+            include: [/(?<!im)pure\.js$/]
         })
     ],
     build: {

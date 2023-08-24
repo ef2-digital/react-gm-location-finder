@@ -23,10 +23,8 @@ export const useOnLocationEvent = () => {
     }, [selectedLocation, setSelectedLocation]);
 
     const onMarkerClick = useCallback(
-        (location: LocationProps, marker: any) => {
+        (location: LocationProps) => {
             handleSelectedLocation(location);
-
-            return setTimeout(() => panToMarker(marker.latLng), 200);
         },
         [map]
     );
@@ -37,10 +35,11 @@ export const useOnLocationEvent = () => {
                 return;
             }
 
-            setTimeout(() => {
-                map.setZoom(12);
-                map.panTo(marker);
-            }, 300);
+    
+            // setTimeout(() => {
+            map.setZoom(12);
+            map.panTo(marker);
+            // }, 200);
         },
         [map]
     );
@@ -51,9 +50,7 @@ export const useOnLocationEvent = () => {
 
             setSelectedLocation(location);
 
-            if (!urlSearchParams.get('location')) {
-                urlSearchParams.set('location', `${kebabCase(location.title)}-${location.id}`);
-            }
+            urlSearchParams.set('location', `${kebabCase(location.title)}-${location.id}`);
 
             if (typeof window !== 'undefined') {
                 const path = window.location.href.split('?')[0];

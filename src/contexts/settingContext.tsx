@@ -22,11 +22,21 @@ export interface Labels {
     dealers?: string;
     placeholder?: string;
     backButtonLabel?: string;
+    openingHoursLabel?: string;
+    timeLabel?: string;
+    dayLabel?: string;
+    hoursLabel?: string;
 }
 
 export type ClassNameList = {
     wrapper?: string;
     map?: string;
+    skeleton?: {
+        panelHeading?: string;
+        panelBody?: string;
+        listItem?: string;
+        map?: string;
+    };
     panel?: {
         section?: string;
         wrapper?: string;
@@ -39,6 +49,9 @@ export type ClassNameList = {
         inputWrapper?: string;
         input?: string;
         button?: string;
+        iconWrapper?: string;
+        iconVerified?: string;
+        icon?: string;
     };
     list?: {
         overview?: string;
@@ -57,22 +70,23 @@ export type ClassNameList = {
         backButton?: string;
         image?: string;
         content?: string;
+        openingHours?: {
+            label?: string;
+        };
     };
 };
 
 export interface Renders {
     loadingSlot?: ReactNode;
     panelHeaderTopSlot?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
-
     panelHeaderBottomSlot?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
-
-    renderListItem?: ({ location }: { location: LocationProps | [] }) => ReactNode;
-    renderListDetail?: ({ location }: { location: LocationProps | [] }) => ReactNode;
+    renderListItem?: ({ location }: { location: LocationProps }) => ReactNode;
+    renderListDetail?: ({ location }: { location: LocationProps }) => ReactNode;
     renderDetailBackButton?: () => ReactNode;
-    renderDetailImage?: ({ location }: { location: LocationProps | [] }) => ReactNode;
-    renderDetailContent?: ({ location }: { location: LocationProps | [] }) => ReactNode;
+    renderDetailImage?: ({ location }: { location: LocationProps }) => ReactNode;
+    renderDetailContent?: ({ location }: { location: LocationProps }) => ReactNode;
     renderDetailOpeningHours?: ({ openingHours }: { openingHours?: OpeningHoursDaysType }) => ReactNode;
-    renderDetailDirections?: ({ location }: { location: LocationProps | [] }) => ReactNode;
+    renderDetailDirections?: ({ location }: { location: LocationProps }) => ReactNode;
 }
 
 export type SettingContextType = {

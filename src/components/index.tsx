@@ -8,6 +8,7 @@ import { LocationFinderProvider, LocationProps } from '../contexts/locationFinde
 import LocationFinderMap from './map';
 import LocationFinderPanel from './panel';
 import { MapProvider } from '../contexts/mapContext';
+import LoadingSkeleton from './LoadingSkeleton';
 
 export type Props = {
     children?: ReactNode;
@@ -59,7 +60,7 @@ export const LocationFinder = ({
     });
 
     if (!isLoaded) {
-        return <>{loadingSlot || <div className="w-full relative min-h-screen">Loading ...</div>}</>;
+        return <>{loadingSlot ?? <LoadingSkeleton classNames={classNames} />}</>;
     }
 
     return (

@@ -2,17 +2,24 @@ import { GoogleMap } from '@react-google-maps/api';
 import { classNamesTailwind } from '../../utils/helpers';
 import { useContext, useEffect } from 'react';
 import { useGoogleMapApi } from '../../hooks/useGoogleMapApi';
-import {
-  BOUNDS_NETHERLANDS,
-  DEFAULT_CENTER,
-  DEFAULT_ZOOM,
-} from '../../utils/constants';
+import { BOUNDS_NETHERLANDS, DEFAULT_CENTER, DEFAULT_ZOOM } from '../../utils/constants';
 import { SettingContext } from '../../contexts/settingContext';
 import { Props } from '..';
+import { useOnLocationEvent } from 'src/hooks';
+import { MapContext } from 'src/contexts/mapContext';
+import { LocationFinderContext } from 'src/contexts/locationFinderContext';
 
 const Map = ({ children }: Props) => {
     const { classNames, mapConfig } = useContext(SettingContext);
+    const { map } = useContext(MapContext);
+    const { locations } = useContext(LocationFinderContext);
+
+    const { handleSelectedLocation } = useOnLocationEvent();
     const { loadMap, handleOnMapIdle } = useGoogleMapApi();
+
+    const urlSearchParams = new URLSearchParams(document.location.search);
+    const locationSlug = urlSearchParams.get('location');
+
     const {
         defaultBounds = BOUNDS_NETHERLANDS,
         defaultCenter = DEFAULT_CENTER,
@@ -21,6 +28,16 @@ const Map = ({ children }: Props) => {
         minZoom = 8,
         styles
     } = mapConfig ?? {};
+
+    useEffect(() => {
+        if (locationSlug) {
+            const selectedLocationId = locationSlug.split(/[- ]+/).pop();
+            const result = locations.filter((location) => location.id.toString() === selectedLocationId).pop();
+            if (result) {
+                handleSelectedLocation(result);
+            }
+        }
+    }, [map]);
 
     return (
         <GoogleMap
