@@ -35,11 +35,8 @@ export const useOnLocationEvent = () => {
                 return;
             }
 
-    
-            // setTimeout(() => {
             map.setZoom(12);
             map.panTo(marker);
-            // }, 200);
         },
         [map]
     );
@@ -47,7 +44,6 @@ export const useOnLocationEvent = () => {
     const handleSelectedLocation = useCallback(
         (location: LocationProps) => {
             const urlSearchParams = new URLSearchParams(document.location.search);
-
             setSelectedLocation(location);
 
             urlSearchParams.set('location', `${kebabCase(location.title)}-${location.id}`);

@@ -30,14 +30,15 @@ const Map = ({ children }: Props) => {
     } = mapConfig ?? {};
 
     useEffect(() => {
-        if (locationSlug) {
+        if (locationSlug && locations) {
             const selectedLocationId = locationSlug.split(/[- ]+/).pop();
             const result = locations.filter((location) => location.id.toString() === selectedLocationId).pop();
+
             if (result) {
                 handleSelectedLocation(result);
             }
         }
-    }, [map]);
+    }, [locations]);
 
     return (
         <GoogleMap

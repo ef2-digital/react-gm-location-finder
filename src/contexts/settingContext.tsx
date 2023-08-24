@@ -32,6 +32,7 @@ export type ClassNameList = {
     wrapper?: string;
     map?: string;
     skeleton?: {
+        panel?: string;
         panelHeading?: string;
         panelBody?: string;
         listItem?: string;
@@ -43,6 +44,11 @@ export type ClassNameList = {
         content?: string;
         heading?: string;
         body?: string;
+        headingTop?: {
+            wrapper?: string;
+            title?: string;
+            subTitle?: string;
+        };
     };
     autocomplete?: {
         wrapper?: string;

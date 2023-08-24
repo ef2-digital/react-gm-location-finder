@@ -4,6 +4,7 @@ import { useDistances } from './useDistances';
 import { notNull } from '../utils/helpers';
 import { useOpeningHours } from './useOpeningHours';
 import { MapContext } from '../contexts/mapContext';
+import mapValues from 'lodash-es/mapValues';
 
 export const useLocations = () => {
     const { calculateDistance } = useDistances();
@@ -34,27 +35,22 @@ export const useLocations = () => {
     const setLocationFinderFormat = (locations: any, baseUrl: string): LocationProps[] => {
         return locations.map((location: any) => {
             const days = location.days?.filter(notNull);
-            let weekDays = [];
+            let weekDays: any[] = [];
 
-            const openingHours =
-                days && Boolean(days.length)
-                    ? {
-                          //@ts-ignore
-                          days: days.map((day) => {
-                              const weekDay = dayMap.get(day.day);
-                              if (typeof weekDay !== 'undefined') {
-                                  return (weekDays[weekDay] = {
-                                      closed: day.closed,
-                                      slots:
-                                          day.slots?.filter(notNull).map((slot: any) => ({
-                                              from: formatTime(slot.from),
-                                              to: formatTime(slot.to)
-                                          })) ?? []
-                                  });
-                              }
-                          })
-                      }
-                    : {};
+            days.map((day: any) => {
+                let weekDay = dayMap.get(day.day);
+
+                if (typeof weekDay !== 'undefined') {
+                    return (weekDays[weekDay] = {
+                        closed: day.closed,
+                        slots:
+                            day.slots?.filter(notNull).map((slot: any) => ({
+                                from: formatTime(slot.from),
+                                to: formatTime(slot.to)
+                            })) ?? []
+                    });
+                }
+            });
 
             return {
                 city: location.city,
@@ -68,7 +64,7 @@ export const useLocations = () => {
                 phone: location.phone,
                 email: location.email,
                 image: location.image?.data?.attributes ? [`${baseUrl}${location.image.data.attributes.url}?resize=800x400`] : undefined,
-                openingHours: openingHours,
+                openingHours: { days: weekDays },
                 attributes: location.attributes ?? {}
             };
         });

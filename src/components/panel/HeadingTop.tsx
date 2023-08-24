@@ -1,23 +1,22 @@
 import { useContext } from 'react';
 import { SettingContext } from '../../contexts/settingContext';
+import { classNamesTailwind } from 'src/utils/helpers';
 
 type HeadingTopProps = {
-  numberOfLocations?: number;
+    numberOfLocations?: number;
 };
 const HeadingTop = ({ numberOfLocations }: HeadingTopProps) => {
-  const { labels } = useContext(SettingContext);
+    const { labels, classNames } = useContext(SettingContext);
+    const { findDealerNearby = 'Vind een locatie in de buurt', dealers = `${numberOfLocations} locaties` } = labels ?? {};
 
-  const {
-    findDealerNearby = 'Vind een locatie in de buurt',
-    dealers = `${numberOfLocations} locaties`,
-  } = labels ?? {};
+    const { panel } = classNames ?? {};
 
-  return (
-    <div className="mb-4 flex h-max items-center justify-between">
-      <h1 className="text-base font-extrabold text-dark">{findDealerNearby}</h1>
-      <span className="text-xs">{dealers}</span>
-    </div>
-  );
+    return (
+        <div className={classNamesTailwind('mb-4 flex h-max items-center justify-between', panel?.headingTop?.wrapper)}>
+            <h1 className={classNamesTailwind('text-base font-extrabold text-dark', panel?.headingTop?.title)}>{findDealerNearby}</h1>
+            <span className={classNamesTailwind('text-xs', panel?.headingTop?.subTitle)}>{dealers}</span>
+        </div>
+    );
 };
 
 export default HeadingTop;

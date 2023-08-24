@@ -39,7 +39,6 @@ export const useOpeningHours = () => {
 
     const getOpeningHoursSlot = (openingHours: OpeningHoursType) => {
         const currentOpeningHour = openingHours ? openingHours.days && openingHours.days[day] : undefined;
-
         const currentOpeningHourSlot =
             currentOpeningHour?.slots && Boolean(currentOpeningHour.slots.length) ? currentOpeningHour.slots.at(-1) : undefined;
 
