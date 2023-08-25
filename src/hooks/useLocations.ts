@@ -4,7 +4,6 @@ import { useDistances } from './useDistances';
 import { notNull } from '../utils/helpers';
 import { useOpeningHours } from './useOpeningHours';
 import { MapContext } from '../contexts/mapContext';
-import mapValues from 'lodash-es/mapValues';
 
 export const useLocations = () => {
     const { calculateDistance } = useDistances();
@@ -70,5 +69,9 @@ export const useLocations = () => {
         });
     };
 
-    return { formatListLocations, setLocationFinderFormat };
+    const renderDirections = (location: LocationProps) => {
+        return { link: `https://www.google.com/maps/dir/${location.position.lat},${location.position.lng}` };
+    };
+
+    return { formatListLocations, setLocationFinderFormat, renderDirections };
 };
