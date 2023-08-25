@@ -19,7 +19,7 @@ const LocationFinderPanel = ({ locations }: { locations: LocationProps[] }) => {
 
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const { panelHeaderTopSlot, panelHeaderBottomSlot, renderListItem, renderListDetail } = renders ?? {};
+    const { renderPanelHeaderTop, renderPanelHeaderBottom, renderListItem, renderListDetail } = renders ?? {};
 
     return (
         <Panel>
@@ -32,13 +32,13 @@ const LocationFinderPanel = ({ locations }: { locations: LocationProps[] }) => {
             ) : (
                 <>
                     <Panel.Heading>
-                        {(panelHeaderTopSlot &&
-                            panelHeaderTopSlot({
+                        {(renderPanelHeaderTop &&
+                            renderPanelHeaderTop({
                                 numberOfLocations: refinedLocations.length
                             })) ?? <Panel.HeadingTop numberOfLocations={refinedLocations.length} />}
                         <AutocompletePanel ref={inputRef} />
-                        {panelHeaderBottomSlot &&
-                            panelHeaderBottomSlot({
+                        {renderPanelHeaderBottom &&
+                            renderPanelHeaderBottom({
                                 numberOfLocations: refinedLocations.length
                             })}
                     </Panel.Heading>

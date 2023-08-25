@@ -84,8 +84,8 @@ export type ClassNameList = {
 
 export interface Renders {
     loadingSlot?: ReactNode;
-    panelHeaderTopSlot?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
-    panelHeaderBottomSlot?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
+    renderPanelHeaderTop?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
+    renderPanelHeaderBottom?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
     renderListItem?: ({ location }: { location: LocationProps }) => ReactNode;
     renderListDetail?: ({ location }: { location: LocationProps }) => ReactNode;
     renderDetailBackButton?: () => ReactNode;
