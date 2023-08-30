@@ -26,6 +26,7 @@ export interface Labels {
     timeLabel?: string;
     dayLabel?: string;
     hoursLabel?: string;
+    closedLabel?: string;
 }
 
 export type ClassNameList = {
@@ -75,6 +76,7 @@ export type ClassNameList = {
         wrapper?: string;
         backButton?: string;
         image?: string;
+        contentWrapper?: string;
         content?: string;
         openingHours?: {
             label?: string;
@@ -88,7 +90,7 @@ export interface Renders {
     renderPanelHeaderBottom?: ({ numberOfLocations }: { numberOfLocations: number }) => ReactNode;
     renderListItem?: ({ location }: { location: LocationProps }) => ReactNode;
     renderListDetail?: ({ location }: { location: LocationProps }) => ReactNode;
-    renderDetailBackButton?: () => ReactNode;
+    renderDetailBackButton?: ({ onHandleClick }: { onHandleClick: () => void }) => ReactNode;
     renderDetailImage?: ({ location }: { location: LocationProps }) => ReactNode;
     renderDetailContent?: ({ location }: { location: LocationProps }) => ReactNode;
     renderDetailOpeningHours?: ({ openingHours }: { openingHours?: OpeningHoursDaysType }) => ReactNode;

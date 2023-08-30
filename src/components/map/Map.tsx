@@ -38,7 +38,7 @@ const Map = ({ children }: Props) => {
                 handleSelectedLocation(result);
             }
         }
-    }, [locations]);
+    }, [loadMap, locations, locationSlug]);
 
     return (
         <GoogleMap

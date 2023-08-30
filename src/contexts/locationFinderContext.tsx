@@ -3,6 +3,7 @@ import { Props } from 'src/components';
 
 export interface LocationProps {
     id: number;
+    externalId?: number | string;
     title: string;
     position: google.maps.LatLngLiteral;
     distance?: number;

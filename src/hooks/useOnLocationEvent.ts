@@ -38,7 +38,7 @@ export const useOnLocationEvent = () => {
             map.setZoom(12);
             map.panTo(marker);
         },
-        [map]
+        [map, selectedLocation]
     );
 
     const handleSelectedLocation = useCallback(

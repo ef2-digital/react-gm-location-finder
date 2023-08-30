@@ -68,8 +68,9 @@ export const LocationFinder = ({
             <LocationFinder.Wrapper mapConfig={mapConfig} renders={renders} classNames={classNames} labels={labels} markerIcon={markerIcon}>
                 <MapProvider>
                     <LocationFinderProvider>
-                        <LocationFinder.Panel locations={locations} />
                         <LocationFinder.Map />
+                        <LocationFinder.Panel locations={locations} />
+
                         {children}
                     </LocationFinderProvider>
                 </MapProvider>

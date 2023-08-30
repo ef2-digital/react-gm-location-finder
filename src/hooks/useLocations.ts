@@ -53,7 +53,8 @@ export const useLocations = () => {
 
             return {
                 city: location.city,
-                id: location.externalId ?? location.id,
+                id: location.id,
+                externalId: location.externalId ?? '',
                 title: location.name,
                 street: location.street,
                 position: {
