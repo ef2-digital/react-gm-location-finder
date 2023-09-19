@@ -3,11 +3,10 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import tsConfigPaths from 'vite-tsconfig-paths';
-import * as packageJson from './package.json';
+import { peerDependencies } from './package.json';
 import { PluginPure } from 'rollup-plugin-pure';
 
-// https://vitejs.dev/config/
-export default defineConfig((configEnv) => ({
+export default defineConfig({
     plugins: [
         react(),
         tsConfigPaths(),
@@ -21,13 +20,13 @@ export default defineConfig((configEnv) => ({
     ],
     build: {
         lib: {
-            entry: resolve('src', 'index.ts'),
+            entry: resolve(__dirname, 'src/index.ts'),
             name: 'ReactGMLocationFinder',
             formats: ['es', 'umd'],
             fileName: (format) => `react-gm-location-finder.${format}.js`
         },
         rollupOptions: {
-            external: [...Object.keys(packageJson.peerDependencies)]
+            external: [...Object.keys(peerDependencies)]
         }
     }
-}));
+});

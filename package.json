@@ -8,12 +8,20 @@
         "build": "tsc && vite build",
         "watch": "vite build --watch",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite preview"
+        "preview": "vite build --config vite.preview.js && vite preview"
     },
     "peerDependencies": {
         "@react-google-maps/api": "^2.19.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
+    },
+    "dependencies": {
+        "@types/lodash-es": "^4.17.8",
+        "tailwind-merge": "^1.14.0",
+        "date-fns": "^2.30.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "@react-google-maps/api": "^2.19.2"
     },
     "devDependencies": {
         "@types/node": "^18.7.6",
@@ -22,7 +30,6 @@
         "@typescript-eslint/eslint-plugin": "^6.0.0",
         "@typescript-eslint/parser": "^6.0.0",
         "@vitejs/plugin-react": "^4.0.3",
-        "date-fns": "^2.30.0",
         "eslint": "^8.45.0",
         "eslint-plugin-react-hooks": "^4.6.0",
         "eslint-plugin-react-refresh": "^0.4.3",
@@ -56,10 +63,5 @@
     "bugs": {
         "url": "https://github.com/ef2-digital/react-gm-location-finder/issues"
     },
-    "homepage": "https://ef2.nl",
-    "dependencies": {
-        "@types/lodash-es": "^4.17.8",
-        "tailwind-merge": "^1.14.0",
-        "vite-dts": "^1.0.4"
-    }
+    "homepage": "https://ef2.nl"
 }
