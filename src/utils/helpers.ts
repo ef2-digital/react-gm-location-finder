@@ -23,3 +23,35 @@ export const classNamesTailwind = (...args: (string | { [key: string]: boolean }
 export const notNull = <T extends object>(value: T | null | undefined): value is T => {
     return value !== null && value !== undefined;
 };
+
+export const calculateDistance = (
+    from: google.maps.LatLng | google.maps.LatLngLiteral,
+    to: google.maps.LatLng | google.maps.LatLngLiteral
+): number => {
+    return google.maps.geometry?.spherical.computeDistanceBetween(from, to) / 1000;
+};
+
+export const offsetCenter = (
+    map: google.maps.Map,
+    center: google.maps.LatLng | google.maps.LatLngLiteral,
+    offsetX?: number,
+    offsetY?: number
+): google.maps.LatLng | google.maps.LatLngLiteral => {
+    const zoom = map.getZoom();
+    const projection = map.getProjection();
+
+    if (!projection || !zoom) {
+        return center;
+    }
+
+    const worldCoordinateCenter = projection.fromLatLngToPoint(center);
+
+    if (!worldCoordinateCenter) {
+        return center;
+    }
+
+    const scale = Math.pow(2, zoom);
+    const pixelOffset = new google.maps.Point(offsetX ? offsetX / scale : scale || 0, offsetY ? offsetY / scale : scale || 0);
+    const worldCoordinateNewCenter = new google.maps.Point(worldCoordinateCenter.x - pixelOffset.x, worldCoordinateCenter.y);
+    return projection.fromPointToLatLng(worldCoordinateNewCenter) ?? center;
+};
