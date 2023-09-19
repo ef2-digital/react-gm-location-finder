@@ -5,7 +5,6 @@ import { classNamesTailwind } from '../utils/helpers';
 import { ClassNameList, MapConfig, Renders, Labels, SettingContext, SettingProvider, MarkerIcon } from '../contexts/settingContext';
 import { LocationFinderProvider, LocationProps } from '../contexts/locationFinderContext';
 
-import LocationFinderMap from './map';
 import LocationFinderPanel from './panel';
 import { MapProvider } from '../contexts/mapContext';
 import LoadingSkeleton from './LoadingSkeleton';
@@ -100,6 +99,6 @@ const LocationFinderWrapper = ({
     return <div className={classNamesTailwind('w-full relative', classNames?.wrapper)}>{children}</div>;
 };
 
-LocationFinder.Map = LocationFinderMap;
+// Old.
 LocationFinder.Panel = LocationFinderPanel;
 LocationFinder.Wrapper = LocationFinderWrapper;

@@ -13,14 +13,17 @@ interface LocationFinderContextValue {
     map?: google.maps.Map;
     selectedLocation?: Location;
     filteredLocations: Location[];
+    showDistance: boolean;
 
     // Setters.
     setMap: (map: google.maps.Map) => void;
     setZoom: (zoom: number) => void;
     setCenter: (center: google.maps.LatLng | google.maps.LatLngLiteral) => void;
     setSelectedLocation: (location: Location) => void;
+    setShowDistance: (showDistance: boolean) => void;
 
     // Methods.
+    onChange: () => void;
     onLocationClick: (location: Location) => void;
     onIdle: () => void;
 }
@@ -34,23 +37,27 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     map: undefined,
     selectedLocation: undefined,
     filteredLocations: [],
+    showDistance: false,
 
     // Setters.
     setMap: () => {},
     setZoom: () => {},
     setCenter: () => {},
     setSelectedLocation: () => {},
+    setShowDistance: () => {},
 
     // Methods.
+    onChange: () => {},
     onLocationClick: () => {},
     onIdle: () => {}
 });
 
 export interface LocationFinderProps<T extends object> {
     locations: Location<T>[];
+    children?: ReactNode | ((value: LocationFinderContextValue) => ReactNode);
 }
 
-export const LocationFinder = <T extends object>({ locations, children }: PropsWithChildren<LocationFinderProps<T>>) => {
+export const LocationFinderProvider = <T extends object>({ locations, children }: PropsWithChildren<LocationFinderProps<T>>) => {
     // Context.
     const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
     const [center, setCenter] = useState<google.maps.LatLng | google.maps.LatLngLiteral>(DEFAULT_CENTER);
@@ -64,6 +71,7 @@ export const LocationFinder = <T extends object>({ locations, children }: PropsW
     const [showDistance, setShowDistance] = useState<boolean>(false);
 
     // Methods.
+
     const reset = useCallback(() => {
         if (!map) {
             return;
@@ -107,6 +115,14 @@ export const LocationFinder = <T extends object>({ locations, children }: PropsW
         setFilteredLocations(listLocations);
     }, [map]);
 
+    const handleOnChange = useCallback(() => {
+        if (!map) {
+            return;
+        }
+
+        setPendingRefine(true);
+    }, [map]);
+
     const handleOnIdle = useCallback(() => {
         if (pendingRefine) {
             setPendingRefine(false);
@@ -136,23 +152,26 @@ export const LocationFinder = <T extends object>({ locations, children }: PropsW
     );
 
     // Render.
+    const value: LocationFinderContextValue = {
+        map,
+        zoom,
+        center,
+        showDistance,
+        selectedLocation,
+        filteredLocations,
+        setMap,
+        setZoom,
+        setCenter,
+        setShowDistance,
+        setSelectedLocation,
+        onChange: handleOnChange,
+        onLocationClick: handleOnLocationClick,
+        onIdle: handleOnIdle
+    };
+
     return (
-        <LocationFinderContext.Provider
-            value={{
-                map,
-                zoom,
-                center,
-                selectedLocation,
-                filteredLocations,
-                setMap,
-                setZoom,
-                setCenter,
-                setSelectedLocation,
-                onLocationClick: handleOnLocationClick,
-                onIdle: handleOnIdle
-            }}
-        >
-            {children}
+        <LocationFinderContext.Provider value={value}>
+            {typeof children === 'function' ? children(value) : children}
         </LocationFinderContext.Provider>
     );
 };
