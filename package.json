@@ -1,70 +1,85 @@
 {
-    "name": "@ef2/react-gm-location-finder",
-    "private": false,
-    "version": "0.1.1",
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "tsc && vite build",
-        "watch": "vite build --watch",
-        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite build --config vite.preview.js && vite preview"
-    },
-    "peerDependencies": {
-        "@react-google-maps/api": "^2.19.2",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
-    },
-    "dependencies": {
-        "@react-google-maps/api": "^2.19.2",
-        "@types/lodash-es": "^4.17.8",
-        "date-fns": "^2.30.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "tailwind-merge": "^1.14.0"
-    },
-    "devDependencies": {
-        "@types/node": "^18.7.6",
-        "@types/react": "^18.2.15",
-        "@types/react-dom": "^18.2.7",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@typescript-eslint/parser": "^6.0.0",
-        "@vitejs/plugin-react": "^4.0.3",
-        "autoprefixer": "^10.4.15",
-        "eslint": "^8.45.0",
-        "eslint-plugin-react-hooks": "^4.6.0",
-        "eslint-plugin-react-refresh": "^0.4.3",
-        "lodash-es": "^4.17.21",
-        "postcss": "^8.4.30",
-        "prettier": "^2.7.1",
-        "rollup-plugin-pure": "^0.1.1",
-        "tailwindcss": "^3.3.3",
-        "typescript": "^5.0.2",
-        "vite": "^4.4.5",
-        "vite-plugin-dts": "^1.4.1",
-        "vite-tsconfig-paths": "^3.5.0"
-    },
-    "description": "A Google Maps Location Finder package",
-    "main": "./dist/react-gm-location-finder.umd.js",
-    "module": "./dist/react-gm-location-finder.es.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "import": "./dist/react-gm-location-finder.es.js",
-            "require": "./dist/react-gm-location-finder.umd.js"
-        }
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ef2-digital/react-gm-location-finder.git"
-    },
-    "keywords": [
-        "location finder"
-    ],
-    "author": "Daan de G",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/ef2-digital/react-gm-location-finder/issues"
-    },
-    "homepage": "https://ef2.nl"
+  "name": "@ef2/react-gm-location-finder",
+  "private": false,
+  "version": "0.1.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "watch": "vite build --watch",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "@nextui-org/react": "^2.1.0",
+    "@react-google-maps/api": "^2.19.2",
+    "framer-motion": "^10.16.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "dependencies": {
+    "@nextui-org/react": "^2.1.13",
+    "@react-google-maps/api": "^2.19.2",
+    "@types/lodash-es": "^4.17.8",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^1.14.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^7.5.0-alpha.2",
+    "@storybook/addon-interactions": "^7.5.0-alpha.2",
+    "@storybook/addon-links": "^7.5.0-alpha.2",
+    "@storybook/addon-onboarding": "^1.0.8",
+    "@storybook/blocks": "^7.5.0-alpha.2",
+    "@storybook/react": "^7.5.0-alpha.2",
+    "@storybook/react-vite": "^7.5.0-alpha.2",
+    "@storybook/testing-library": "^0.2.1",
+    "@types/node": "^18.7.6",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.15",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "eslint-plugin-storybook": "^0.6.13",
+    "lodash-es": "^4.17.21",
+    "postcss": "^8.4.30",
+    "prettier": "^2.7.1",
+    "rollup-plugin-pure": "^0.1.1",
+    "storybook": "^7.5.0-alpha.2",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vite-plugin-dts": "^1.4.1",
+    "vite-tsconfig-paths": "^3.5.0"
+  },
+  "description": "A Google Maps Location Finder package",
+  "main": "./dist/react-gm-location-finder.umd.js",
+  "module": "./dist/react-gm-location-finder.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/react-gm-location-finder.es.js",
+      "require": "./dist/react-gm-location-finder.umd.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ef2-digital/react-gm-location-finder.git"
+  },
+  "keywords": [
+    "location finder"
+  ],
+  "author": "Daan de G",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ef2-digital/react-gm-location-finder/issues"
+  },
+  "homepage": "https://ef2.nl"
 }

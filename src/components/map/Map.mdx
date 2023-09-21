@@ -1,0 +1,37 @@
+{/* Map.mdx */}
+
+import { Canvas, Meta, Source } from '@storybook/blocks';
+
+import * as MapStories from './Map.stories';
+
+<Meta of={MapStories} />
+
+# Location finder
+
+TODO
+
+## Providers
+<Source code={`
+<NextUIProvider>
+    <LocationFinderProvider locations={locations}>
+        {children}
+    </LocationFinderProvider>
+</NextUIProvider>
+`}/>
+
+## Google Maps API
+<Source code={`
+const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'YOUR_API_KEY',
+    libraries: ["places"]
+});
+`}/>
+
+## Imports
+<Source code={`
+import { Map, Card } from '@ef2/react-gm-location-finder';
+import { CardBody, ListboxItem, Input } from '@nextui-org/react';
+`}/>
+
+<Canvas of={MapStories.Primary} />

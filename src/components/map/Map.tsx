@@ -2,10 +2,10 @@ import { GoogleMap, GoogleMapProps } from '@react-google-maps/api';
 import { PropsWithChildren } from 'react';
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import Marker from './Marker';
-import Content from './Content';
+import MapContent from './MapContent';
 import { classNamesTailwind } from 'src/utils/helpers';
 
-interface MapProps extends Omit<GoogleMapProps, 'onLoad' | 'zoom' | 'onZoomChanged' | 'onDragEnd' | 'center' | 'onIdle'> {}
+export interface MapProps extends Omit<GoogleMapProps, 'onLoad' | 'zoom' | 'onZoomChanged' | 'onDragEnd' | 'center' | 'onIdle'> {}
 
 const Map = ({ children, mapContainerClassName, ...props }: PropsWithChildren<MapProps>) => {
     const { setMap, onChange, zoom, center, onIdle } = useLocationFinder();
@@ -27,6 +27,6 @@ const Map = ({ children, mapContainerClassName, ...props }: PropsWithChildren<Ma
 };
 
 Map.Marker = Marker;
-Map.Content = Content;
+Map.Content = MapContent;
 
 export default Map;

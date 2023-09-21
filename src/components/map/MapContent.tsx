@@ -1,13 +1,13 @@
 import { PropsWithChildren } from 'react';
 import { classNamesTailwind } from 'src/utils/helpers';
 
-interface ContentProps {
+export interface MapContentProps {
     className?: string;
     classNameContainer?: string;
     classNameRow?: string;
 }
 
-const Content = ({ className, classNameContainer, classNameRow, children }: PropsWithChildren<ContentProps>) => {
+const MapContent = ({ className, classNameContainer, classNameRow, children }: PropsWithChildren<MapContentProps>) => {
     return (
         <div className={classNamesTailwind('md:absolute -mt-12 md:mt-0 relative top-0 w-full left-0 h-full invisible z-20', className)}>
             <div className={classNamesTailwind('container mx-auto invisible h-full', classNameContainer)}>
@@ -19,4 +19,4 @@ const Content = ({ className, classNameContainer, classNameRow, children }: Prop
     );
 };
 
-export default Content;
+export default MapContent;

@@ -1,4 +1,5 @@
-import { createContext, PropsWithChildren, ReactNode, useCallback, useContext, useState } from 'react';
+import { set } from 'date-fns';
+import { createContext, PropsWithChildren, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 import { calculateDistance, offsetCenter } from 'src/utils/helpers';
 
@@ -12,8 +13,10 @@ interface LocationFinderContextValue {
     // Context.
     map?: google.maps.Map;
     selectedLocation?: Location;
+    locations: Location[];
     filteredLocations: Location[];
     showDistance: boolean;
+    inputRef?: React.RefObject<HTMLInputElement>;
 
     // Setters.
     setMap: (map: google.maps.Map) => void;
@@ -23,9 +26,11 @@ interface LocationFinderContextValue {
     setShowDistance: (showDistance: boolean) => void;
 
     // Methods.
+    onIdle: () => void;
     onChange: () => void;
     onLocationClick: (location: Location) => void;
-    onIdle: () => void;
+    onAutocompleteLoad: (autocomplete: google.maps.places.Autocomplete) => void;
+    onPlaceChanged: () => void;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
@@ -36,8 +41,10 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     // Context.
     map: undefined,
     selectedLocation: undefined,
+    locations: [],
     filteredLocations: [],
     showDistance: false,
+    inputRef: undefined,
 
     // Setters.
     setMap: () => {},
@@ -47,9 +54,11 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setShowDistance: () => {},
 
     // Methods.
+    onIdle: () => {},
     onChange: () => {},
+    onPlaceChanged: () => {},
     onLocationClick: () => {},
-    onIdle: () => {}
+    onAutocompleteLoad: () => {}
 });
 
 export interface LocationFinderProps<T extends object> {
@@ -57,37 +66,37 @@ export interface LocationFinderProps<T extends object> {
     children?: ReactNode | ((value: LocationFinderContextValue) => ReactNode);
 }
 
-export const LocationFinderProvider = <T extends object>({ locations, children }: PropsWithChildren<LocationFinderProps<T>>) => {
+export const LocationFinderProvider = <T extends object>({ locations, children }: LocationFinderProps<T>) => {
     // Context.
     const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
     const [center, setCenter] = useState<google.maps.LatLng | google.maps.LatLngLiteral>(DEFAULT_CENTER);
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
     const [filteredLocations, setFilteredLocations] = useState<Location[]>(locations);
     const [map, setMap] = useState<google.maps.Map | undefined>(undefined);
+    const [showDistance, setShowDistance] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // State.
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
     const [previousZoom, setPreviousZoom] = useState<number | undefined>(undefined);
-    const [showDistance, setShowDistance] = useState<boolean>(false);
+    const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
 
     // Methods.
-
     const reset = useCallback(() => {
         if (!map) {
             return;
         }
 
-        // if (inputRef.current) {
-        //     inputRef.current.value = '';
-        // }
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
 
         // map.fitBounds(bounds);
         map.setZoom(DEFAULT_ZOOM);
 
         setShowDistance(false);
         setFilteredLocations(locations);
-        // }, [map, inputRef]);
-    }, [map]);
+    }, [map, inputRef, locations]);
 
     const refine = useCallback(() => {
         if (!map) {
@@ -151,11 +160,48 @@ export const LocationFinderProvider = <T extends object>({ locations, children }
         [map]
     );
 
+    const handeOnAutocompleteLoad = useCallback(
+        (autocomplete: google.maps.places.Autocomplete) => {
+            setAutocomplete(autocomplete);
+        },
+        [setAutocomplete]
+    );
+
+    const handleOnPlaceChanged = useCallback(() => {
+        if (!autocomplete || !map) {
+            return;
+        }
+
+        const place = autocomplete.getPlace();
+        const geometry = place.geometry;
+
+        if (geometry?.viewport) {
+            map.fitBounds(geometry.viewport);
+        }
+
+        if (geometry?.location) {
+            map.setCenter(offsetCenter(map, geometry.location));
+        }
+
+        setPendingRefine(true);
+    }, [autocomplete, map]);
+
+    // Life cycle.
+    useEffect(() => {
+        if (!map) {
+            return setFilteredLocations(locations);
+        }
+
+        reset();
+    }, [locations]);
+
     // Render.
     const value: LocationFinderContextValue = {
         map,
         zoom,
         center,
+        inputRef,
+        locations,
         showDistance,
         selectedLocation,
         filteredLocations,
@@ -164,9 +210,11 @@ export const LocationFinderProvider = <T extends object>({ locations, children }
         setCenter,
         setShowDistance,
         setSelectedLocation,
+        onIdle: handleOnIdle,
         onChange: handleOnChange,
+        onPlaceChanged: handleOnPlaceChanged,
         onLocationClick: handleOnLocationClick,
-        onIdle: handleOnIdle
+        onAutocompleteLoad: handeOnAutocompleteLoad,
     };
 
     return (
