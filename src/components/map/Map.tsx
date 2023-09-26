@@ -8,7 +8,12 @@ import { classNamesTailwind } from 'src/utils/helpers';
 export interface MapProps extends Omit<GoogleMapProps, 'onLoad' | 'zoom' | 'onZoomChanged' | 'onDragEnd' | 'center' | 'onIdle'> {}
 
 const Map = ({ children, mapContainerClassName, ...props }: PropsWithChildren<MapProps>) => {
-    const { setMap, onChange, zoom, center, onIdle } = useLocationFinder();
+    const { setMap, onChange, zoom, center, onIdle, loading } = useLocationFinder();
+
+    if (loading) {
+        // TODO Add loading component.
+        return null;
+    }
 
     return (
         <GoogleMap

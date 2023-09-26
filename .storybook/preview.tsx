@@ -20,6 +20,83 @@ const locations = [
             lat: 52.38,
             lng: 4.895168
         }
+    },
+    {
+        id: '2',
+        position: {
+            lat: 52.38,
+            lng: 4.9
+        }
+    },
+    {
+        id: '3',
+        position: {
+            lat: 52.38,
+            lng: 5
+        }
+    },
+    {
+        id: '4',
+        position: {
+            lat: 52.4,
+            lng: 5
+        }
+    },
+    {
+        id: '5',
+        position: {
+            lat: 52.5,
+            lng: 5
+        }
+    },
+    {
+        id: '6',
+        position: {
+            lat: 52.6,
+            lng: 5
+        }
+    },
+    {
+        id: '7',
+        position: {
+            lat: 52.7,
+            lng: 5
+        }
+    },
+    {
+        id: '8',
+        position: {
+            lat: 52.8,
+            lng: 5
+        }
+    },
+    {
+        id: '9',
+        position: {
+            lat: 52.9,
+            lng: 5
+        }
+    },
+    {
+        id: '10',
+        position: {
+            lat: 53,
+            lng: 5
+        }
+    },
+    {
+        id: '11',
+        position: {
+            lat: 53.1,
+            lng: 5
+        }
+    },
+    {
+        id: '12',
+        position: {
+            lat: 53.2,
+            lng: 5
+        }
     }
 ];
 
@@ -39,17 +116,14 @@ const preview: Preview = {
                 id: 'google-map-script',
                 // @ts-ignore, this is a storybook env variable.
                 googleMapsApiKey: import.meta.env.STORYBOOK_GOOGLE_API_KEY || '',
-                libraries: ["places"]
+                libraries: ['places'],
+                language: 'nl',
+                region: 'nl'
             });
-
-            if (!isLoaded) {
-                // TODO: Add a loading indicator.
-                return <></>;
-            }
 
             return (
                 <NextUIProvider>
-                    <LocationFinderProvider locations={locations}>
+                    <LocationFinderProvider loading={!isLoaded} locations={locations}>
                         <Story />
                     </LocationFinderProvider>
                 </NextUIProvider>

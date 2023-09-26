@@ -1,5 +1,4 @@
-import { set } from 'date-fns';
-import { createContext, PropsWithChildren, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 import { calculateDistance, offsetCenter } from 'src/utils/helpers';
 
@@ -12,11 +11,14 @@ interface LocationFinderContextValue {
 
     // Context.
     map?: google.maps.Map;
+    autocomplete?: google.maps.places.Autocomplete;
     selectedLocation?: Location;
     locations: Location[];
     filteredLocations: Location[];
     showDistance: boolean;
     inputRef?: React.RefObject<HTMLInputElement>;
+    defaultSearch?: string;
+    loading: boolean;
 
     // Setters.
     setMap: (map: google.maps.Map) => void;
@@ -24,6 +26,7 @@ interface LocationFinderContextValue {
     setCenter: (center: google.maps.LatLng | google.maps.LatLngLiteral) => void;
     setSelectedLocation: (location: Location) => void;
     setShowDistance: (showDistance: boolean) => void;
+    setDefaultSearch?: (search: string) => void;
 
     // Methods.
     onIdle: () => void;
@@ -31,6 +34,7 @@ interface LocationFinderContextValue {
     onLocationClick: (location: Location) => void;
     onAutocompleteLoad: (autocomplete: google.maps.places.Autocomplete) => void;
     onPlaceChanged: () => void;
+    onBackClick: () => void;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
@@ -40,11 +44,14 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
 
     // Context.
     map: undefined,
+    autocomplete: undefined,
     selectedLocation: undefined,
     locations: [],
     filteredLocations: [],
     showDistance: false,
     inputRef: undefined,
+    defaultSearch: undefined,
+    loading: true,
 
     // Setters.
     setMap: () => {},
@@ -58,15 +65,17 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     onChange: () => {},
     onPlaceChanged: () => {},
     onLocationClick: () => {},
-    onAutocompleteLoad: () => {}
+    onAutocompleteLoad: () => {},
+    onBackClick: () => {}
 });
 
 export interface LocationFinderProps<T extends object> {
     locations: Location<T>[];
     children?: ReactNode | ((value: LocationFinderContextValue) => ReactNode);
+    loading: boolean;
 }
 
-export const LocationFinderProvider = <T extends object>({ locations, children }: LocationFinderProps<T>) => {
+export const LocationFinderProvider = <T extends object>({ locations, loading, children }: LocationFinderProps<T>) => {
     // Context.
     const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
     const [center, setCenter] = useState<google.maps.LatLng | google.maps.LatLngLiteral>(DEFAULT_CENTER);
@@ -75,11 +84,12 @@ export const LocationFinderProvider = <T extends object>({ locations, children }
     const [map, setMap] = useState<google.maps.Map | undefined>(undefined);
     const [showDistance, setShowDistance] = useState<boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
+    const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
 
     // State.
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
     const [previousZoom, setPreviousZoom] = useState<number | undefined>(undefined);
-    const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
 
     // Methods.
     const reset = useCallback(() => {
@@ -167,6 +177,17 @@ export const LocationFinderProvider = <T extends object>({ locations, children }
         [setAutocomplete]
     );
 
+    const handleOnBackClick = useCallback(() => {
+        if (!map || !previousZoom) {
+            return;
+        }
+
+        map.setZoom(previousZoom);
+
+        setSelectedLocation(undefined);
+        // onSelectedLocationChange({ location: undefined });
+    }, [map, previousZoom]);
+
     const handleOnPlaceChanged = useCallback(() => {
         if (!autocomplete || !map) {
             return;
@@ -200,21 +221,26 @@ export const LocationFinderProvider = <T extends object>({ locations, children }
         map,
         zoom,
         center,
+        loading,
         inputRef,
         locations,
+        autocomplete,
         showDistance,
+        defaultSearch,
         selectedLocation,
         filteredLocations,
         setMap,
         setZoom,
         setCenter,
         setShowDistance,
+        setDefaultSearch,
         setSelectedLocation,
         onIdle: handleOnIdle,
         onChange: handleOnChange,
+        onBackClick: handleOnBackClick,
         onPlaceChanged: handleOnPlaceChanged,
         onLocationClick: handleOnLocationClick,
-        onAutocompleteLoad: handeOnAutocompleteLoad,
+        onAutocompleteLoad: handeOnAutocompleteLoad
     };
 
     return (

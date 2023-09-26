@@ -1,0 +1,28 @@
+{/* Installation.mdx */}
+import { Meta, Source } from '@storybook/blocks';
+
+<Meta title="Installation" />
+
+## Provider Setup
+It is essential to add the `LocationFinderProvider` at the root of your application. This will provide the `useLocationFinder` hook to all of your components. This library uses Next UI for some components, so you will need to add the `NextUIProvider` as well.
+<Source code={`
+// 1. import NextUIProvider and LocationFinderProvider components.
+import { NextUIProvider } from '@nextui-org/react';
+import { LocationFinderProvider } from '@ef2/react-gm-location-finder';
+
+// 2. Set Google Maps API key and libraries.
+const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'YOUR_API_KEY',
+    libraries: ['places'],
+    language: 'nl',
+    region: 'nl'
+});
+
+// 3. Wrap NextUIProvider at the root of your application.
+<NextUIProvider>
+    <LocationFinderProvider loading={!isLoaded} locations={locations}>
+        {children}
+    </LocationFinderProvider>
+</NextUIProvider>
+`}/>
