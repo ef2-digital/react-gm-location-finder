@@ -1,7 +1,7 @@
 {
   "name": "@ef2/react-gm-location-finder",
   "private": false,
-  "version": "0.1.9",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,6 +19,7 @@
     "react-dom": "^18.2.0"
   },
   "dependencies": {
+    "@googlemaps/markerclusterer": "^2.5.0",
     "@nextui-org/react": "^2.1.13",
     "@react-google-maps/api": "^2.19.2",
     "@types/lodash-es": "^4.17.8",
