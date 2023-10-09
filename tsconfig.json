@@ -13,11 +13,10 @@
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
-        "declaration": false,
-        // "declaration": true,
+        "declaration": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
-        "declarationMap": true,
+        "declarationMap": false,
         "baseUrl": ".",
         "paths": {
             "react-gm-location-finder": ["src/component/index.ts"]

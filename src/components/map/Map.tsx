@@ -1,14 +1,17 @@
 import { GoogleMap, GoogleMapProps } from '@react-google-maps/api';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useCallback } from 'react';
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import Marker from './Marker';
 import MapContent from './MapContent';
 import { classNamesTailwind } from 'src/utils/helpers';
+import { DEFAULT_ZOOM } from 'src/types';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
+import { set } from 'date-fns';
 
 export interface MapProps extends Omit<GoogleMapProps, 'onLoad' | 'zoom' | 'onZoomChanged' | 'onDragEnd' | 'center' | 'onIdle'> {}
 
 const Map = ({ children, mapContainerClassName, ...props }: PropsWithChildren<MapProps>) => {
-    const { setMap, onChange, zoom, center, onIdle, loading } = useLocationFinder();
+    const { setMap, map, onChange, zoom, setZoom, center, onIdle, loading } = useLocationFinder();
 
     if (loading) {
         // TODO Add loading component.

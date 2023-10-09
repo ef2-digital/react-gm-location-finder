@@ -2,15 +2,14 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, u
 import { DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 import { calculateDistance, offsetCenter } from 'src/utils/helpers';
 
-// Helper.
-
 // Context.
-interface LocationFinderContextValue {
+interface LocationFinderContextValue<T extends object> {
     zoom: number;
     center: google.maps.LatLng | google.maps.LatLngLiteral;
 
     // Context.
     map?: google.maps.Map;
+    bounds?: google.maps.LatLngBounds;
     autocomplete?: google.maps.places.Autocomplete;
     selectedLocation?: Location;
     locations: Location[];
@@ -23,6 +22,7 @@ interface LocationFinderContextValue {
     // Setters.
     setMap: (map: google.maps.Map) => void;
     setZoom: (zoom: number) => void;
+    setBounds: (bounds: google.maps.LatLngBounds) => void;
     setCenter: (center: google.maps.LatLng | google.maps.LatLngLiteral) => void;
     setSelectedLocation: (location: Location) => void;
     setShowDistance: (showDistance: boolean) => void;
@@ -37,45 +37,50 @@ interface LocationFinderContextValue {
     onBackClick: () => void;
 }
 
-const LocationFinderContext = createContext<LocationFinderContextValue>({
-    // Default values.
-    zoom: DEFAULT_ZOOM,
-    center: DEFAULT_CENTER,
+const createLocationFinderContext = <T extends object = {}>() => {
+    return createContext<LocationFinderContextValue<T>>({
+        // Default values.
+        zoom: DEFAULT_ZOOM,
+        center: DEFAULT_CENTER,
 
-    // Context.
-    map: undefined,
-    autocomplete: undefined,
-    selectedLocation: undefined,
-    locations: [],
-    filteredLocations: [],
-    showDistance: false,
-    inputRef: undefined,
-    defaultSearch: undefined,
-    loading: true,
+        // Context.
+        map: undefined,
+        bounds: undefined,
+        autocomplete: undefined,
+        selectedLocation: undefined,
+        locations: [],
+        filteredLocations: [],
+        showDistance: false,
+        inputRef: undefined,
+        defaultSearch: undefined,
+        loading: true,
 
-    // Setters.
-    setMap: () => {},
-    setZoom: () => {},
-    setCenter: () => {},
-    setSelectedLocation: () => {},
-    setShowDistance: () => {},
+        // Setters.
+        setMap: () => {},
+        setZoom: () => {},
+        setBounds: () => {},
+        setCenter: () => {},
+        setSelectedLocation: () => {},
+        setShowDistance: () => {},
 
-    // Methods.
-    onIdle: () => {},
-    onChange: () => {},
-    onPlaceChanged: () => {},
-    onLocationClick: () => {},
-    onAutocompleteLoad: () => {},
-    onBackClick: () => {}
-});
+        // Methods.
+        onIdle: () => {},
+        onChange: () => {},
+        onPlaceChanged: () => {},
+        onLocationClick: () => {},
+        onAutocompleteLoad: () => {},
+        onBackClick: () => {}
+    });
+};
 
 export interface LocationFinderProps<T extends object> {
     locations: Location<T>[];
-    children?: ReactNode | ((value: LocationFinderContextValue) => ReactNode);
+    children?: ReactNode | ((value: LocationFinderContextValue<T>) => ReactNode);
     loading: boolean;
+    afterRefine?: (zoom?: number, bounds?: google.maps.LatLngBounds, center?: google.maps.LatLng) => void;
 }
 
-export const LocationFinderProvider = <T extends object>({ locations, loading, children }: LocationFinderProps<T>) => {
+export const LocationFinderProvider = <T extends object>({ locations, loading, children, afterRefine }: LocationFinderProps<T>) => {
     // Context.
     const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
     const [center, setCenter] = useState<google.maps.LatLng | google.maps.LatLngLiteral>(DEFAULT_CENTER);
@@ -86,6 +91,7 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
     const inputRef = useRef<HTMLInputElement>(null);
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
+    const [bounds, setBounds] = useState<google.maps.LatLngBounds | undefined>(undefined);
 
     // State.
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
@@ -122,7 +128,14 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
         }
 
         const showDistance = zoom ? zoom > 8 : false;
+
         setShowDistance(showDistance);
+        setCenter(center);
+        setBounds(bounds);
+
+        if (zoom) {
+            setZoom(zoom);
+        }
 
         const listLocations = showDistance
             ? locations
@@ -132,6 +145,7 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
             : locations.filter((location) => bounds.contains(location.position));
 
         setFilteredLocations(listLocations);
+        afterRefine && afterRefine(zoom, bounds, center);
     }, [map]);
 
     const handleOnChange = useCallback(() => {
@@ -217,10 +231,12 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
     }, [locations]);
 
     // Render.
-    const value: LocationFinderContextValue = {
+    const LocationFinderContext = createLocationFinderContext<T>();
+    const value: LocationFinderContextValue<T> = {
         map,
         zoom,
         center,
+        bounds,
         loading,
         inputRef,
         locations,
@@ -231,6 +247,7 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
         filteredLocations,
         setMap,
         setZoom,
+        setBounds,
         setCenter,
         setShowDistance,
         setDefaultSearch,
@@ -250,8 +267,8 @@ export const LocationFinderProvider = <T extends object>({ locations, loading, c
     );
 };
 
-const useLocationFinder = () => {
-    return useContext(LocationFinderContext);
+const useLocationFinder = <T extends object>() => {
+    return useContext(createLocationFinderContext<T>());
 };
 
 export default useLocationFinder;
