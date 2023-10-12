@@ -10,11 +10,13 @@ export interface LocationFinderContextValue<T extends object = {}> {
 
     loading: boolean;
     locations: Location<T>[];
+    listLocations: Location<T>[];
 
     setDefaultZoom: (zoom: number) => void;
     setDefaultCenter: (center: Center) => void;
     setDefaultBounds: (bounds: Bounds) => void;
     setDefaultSearch: (search: string) => void;
+    setListLocations: (locations: Location<T>[]) => void;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
@@ -25,11 +27,13 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
 
     loading: true,
     locations: [],
+    listLocations: [],
 
     setDefaultZoom: () => {},
     setDefaultCenter: () => {},
     setDefaultBounds: () => {},
-    setDefaultSearch: () => {}
+    setDefaultSearch: () => {},
+    setListLocations: () => {}
 });
 
 export interface LocationFinderProps<T extends object = {}> {
@@ -48,6 +52,7 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [defaultCenter, setDefaultCenter] = useState<Center>(DEFAULT_CENTER);
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
+    const [listLocations, setListLocations] = useState<Location[]>(locations);
 
     // Render.
     return (
@@ -62,7 +67,9 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setDefaultCenter,
                 setDefaultSearch,
                 loading,
-                locations
+                locations,
+                listLocations,
+                setListLocations
             }}
         >
             {children}
@@ -71,7 +78,7 @@ export const LocationFinderProvider = <T extends object = {}>({
 };
 
 export const useLocationFinderContext = <T extends object = {}>(): LocationFinderContextValue<T> => {
-    return useContext(LocationFinderContext) as LocationFinderContextValue<T>;
+    return useContext(LocationFinderContext) as unknown as LocationFinderContextValue<T>;
 };
 
 export default LocationFinderContext;

@@ -1,4 +1,3 @@
-import { set } from 'date-fns';
 import { useCallback, useRef, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import { Bounds, Center } from 'src/types';

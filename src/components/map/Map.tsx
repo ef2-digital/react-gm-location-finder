@@ -4,20 +4,17 @@ import useLocationFinder from 'src/hooks/useLocationFinder';
 import Marker from './Marker';
 import MapContent from './MapContent';
 import { classNamesTailwind } from 'src/utils/helpers';
+import { DEFAULT_BOUNDS } from 'src/types';
+import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 
 export interface MapProps extends GoogleMapProps {}
 
 const CONTAINER_CLASS_NAME = 'w-full relative z-0 h-[60vh] min-h-[25rem] md:h-screen';
 
 const Map = ({ children, mapContainerClassName, onLoad, onIdle, onDragEnd, onZoomChanged, ...props }: PropsWithChildren<MapProps>) => {
-    const {
-        onChange,
-        defaultCenter,
-        defaultZoom,
-        onIdle: onIdleLocationFinder,
-        onLoad: onLoadLocationFinder,
-        loading
-    } = useLocationFinder();
+    // Hooks.
+    const { defaultCenter, defaultZoom } = useLocationFinderContext();
+    const { onChange, onIdle: onIdleLocationFinder, onLoad: onLoadLocationFinder, loading } = useLocationFinder();
 
     const className = useMemo(() => classNamesTailwind(CONTAINER_CLASS_NAME, mapContainerClassName), [mapContainerClassName]);
 

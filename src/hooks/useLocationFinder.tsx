@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import type { Bounds, Center, Location } from 'src/types';
 import { offsetCenter } from 'src/utils/helpers';
+import usePagination from './usePagination';
+import { get } from 'http';
 
 const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
     if (bounds instanceof google.maps.LatLngBounds) {
@@ -22,16 +24,18 @@ const useLocationFinder = <T extends Object>() => {
         setDefaultCenter,
         setDefaultSearch,
         setDefaultZoom,
+        setListLocations,
         locations,
+        listLocations,
         loading
     } = useLocationFinderContext<T>();
 
     // State.
     const [map, setMap] = useState<google.maps.Map>();
-    const [listLocations, setListLocations] = useState<Location<T>[]>(locations);
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
     const [previousZoom, setPreviousZoom] = useState<number>(defaultZoom);
     const [selectedLocation, setSelectedLocation] = useState<Location<T> | undefined>(undefined);
+    const { getPage, loadMore } = usePagination<T>();
 
     // Methods.
     const handleOnLoad = useCallback((map: google.maps.Map) => {
@@ -43,28 +47,28 @@ const useLocationFinder = <T extends Object>() => {
         setPendingRefine(true);
     };
 
-    const refine = (bounds?: Bounds) => {
+    const refine = () => {
         if (!map) {
             return;
         }
 
-        const newBounds = bounds ?? map.getBounds();
+        const bounds = map.getBounds();
 
-        if (!newBounds) {
-            return;
+        if (bounds) {
+            setListLocations(getPage(locations, getBounds(bounds)));
         }
+    };
 
-        const listLocations = locations.filter((location) => getBounds(newBounds).contains(location.position));
-
-        setListLocations(listLocations);
+    const handleLoadMoreListLocations = () => {
+        loadMore();
+        refine();
     };
 
     const reset = (map: google.maps.Map) => {
         map.setZoom(defaultZoom);
         map.setCenter(defaultCenter);
-        map.fitBounds(defaultBounds);
 
-        refine(defaultBounds);
+        refine();
     };
 
     const handleOnIdle = () => {
@@ -110,7 +114,7 @@ const useLocationFinder = <T extends Object>() => {
 
         setSelectedLocation(undefined);
         setPendingRefine(true);
-    }, [map, previousZoom]);
+    }, [map, previousZoom, setSelectedLocation, setPendingRefine]);
 
     // Life cycle.
     useEffect(() => {
@@ -157,7 +161,8 @@ const useLocationFinder = <T extends Object>() => {
         onLoad: handleOnLoad,
         onChange: handleOnChange,
         onLocationClick: handleOnLocationClick,
-        onBackClick: handleOnBackClick
+        onBackClick: handleOnBackClick,
+        loadMoreListLocations: handleLoadMoreListLocations
     };
 };
 
