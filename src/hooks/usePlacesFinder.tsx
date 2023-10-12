@@ -1,9 +1,36 @@
-import { useCallback, useRef } from 'react';
-import useLocationFinder from './useLocationFinder';
+import { set } from 'date-fns';
+import { useCallback, useRef, useState } from 'react';
+import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
+import { Bounds, Center } from 'src/types';
 
-const usePlacesFinder = () => {
-    const { onAutocompleteLoad, autocomplete, setZoom, setCenter, setDefaultSearch } = useLocationFinder();
+export interface PlacesFinderProps {
+    setDefaultZoom: (zoom: number) => void;
+    setDefaultCenter: (center: Center) => void;
+    setDefaultBounds: (bounds: Bounds) => void;
+    setDefaultSearch?: (search: string) => void;
+}
+
+export interface PlacesFinderOptions {
+    zoomAfterPlaceChanged?: number;
+}
+
+const DEFAULT_ZOOM_AFTER_PLACE_CHANGED = 12;
+
+const usePlacesFinder = (options?: PlacesFinderOptions) => {
+    // Hooks.
+    const { setDefaultCenter, setDefaultBounds, setDefaultZoom, setDefaultSearch } = useLocationFinderContext();
+
+    // State.
+    const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Methods.
+    const handleOnLoad = useCallback(
+        (autocomplete: google.maps.places.Autocomplete) => {
+            setAutocomplete(autocomplete);
+        },
+        [setAutocomplete]
+    );
 
     const handleOnPlaceChanged = useCallback(() => {
         if (!autocomplete) {
@@ -11,29 +38,36 @@ const usePlacesFinder = () => {
         }
 
         const place = autocomplete.getPlace();
-        const location = place.geometry?.location;
+        const geometry = place.geometry;
 
-        if (!location) {
+        if (!geometry?.location) {
             return;
         }
 
-        setCenter(location);
-        setZoom(12);
-    }, [autocomplete]);
+        const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
+        const newCenter = geometry.location;
+
+        setDefaultCenter(newCenter);
+        setDefaultZoom(newZoom);
+
+        if (geometry.viewport) {
+            setDefaultBounds(geometry.viewport);
+        }
+
+        handleOnButtonClick();
+    }, [setDefaultCenter, setDefaultZoom, autocomplete]);
 
     const handleOnButtonClick = useCallback(() => {
         const value = inputRef.current?.value;
 
-        if (!setDefaultSearch || !value) {
-            return;
+        if (value) {
+            setDefaultSearch(value);
         }
-
-        setDefaultSearch(value);
-    }, []);
+    }, [setDefaultSearch]);
 
     return {
         inputRef,
-        onAutocompleteLoad,
+        onLoad: handleOnLoad,
         onPlaceChanged: handleOnPlaceChanged,
         onButtonClick: handleOnButtonClick
     };

@@ -9,7 +9,7 @@ interface MarkerProps extends Omit<GoogleMapMarkerProps, 'position' | 'onClick'>
 const Marker = ({ location, ...props }: MarkerProps) => {
     const { onLocationClick } = useLocationFinder();
 
-    return <GoogleMapMarker position={location.position} onClick={() => onLocationClick(location)} {...props} />;
+    return <GoogleMapMarker position={location.position} onClick={() => onLocationClick(location.id)} {...props} />;
 };
 
 export default Marker;

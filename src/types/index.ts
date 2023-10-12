@@ -16,3 +16,6 @@ export const DEFAULT_BOUNDS: google.maps.LatLngBoundsLiteral = {
     south: 50.6,
     west: 3.1
 };
+
+export type Center = google.maps.LatLng | google.maps.LatLngLiteral;
+export type Bounds = google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral;

@@ -1,4 +1,4 @@
-import useLocationFinder, { LocationFinderProvider } from './useLocationFinder';
+import useLocationFinder from './useLocationFinder';
 import usePlacesFinder from './usePlacesFinder';
 
-export { useLocationFinder, usePlacesFinder, LocationFinderProvider };
+export { useLocationFinder, usePlacesFinder };

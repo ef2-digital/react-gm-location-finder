@@ -7,17 +7,11 @@ export interface CardListProps {
 }
 
 const CardList = ({ children }: CardListProps) => {
-    const { locations, onLocationClick } = useLocationFinder();
+    const { onLocationClick } = useLocationFinder();
 
     // Methods.
     const handleOnClick = (key: Key) => {
-        const location = locations.find((location) => location.id === key);
-
-        if (!location) {
-            return;
-        }
-
-        onLocationClick(location);
+        onLocationClick(key as string);
     };
 
     return <Listbox onAction={handleOnClick}>{children}</Listbox>;
