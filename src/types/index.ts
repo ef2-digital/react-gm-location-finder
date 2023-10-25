@@ -1,6 +1,7 @@
 export type Location<T extends object = {}> = T & {
     id: string;
     position: google.maps.LatLngLiteral;
+    distance?: number;
 };
 
 export const DEFAULT_ZOOM = 8;

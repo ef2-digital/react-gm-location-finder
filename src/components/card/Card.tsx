@@ -3,7 +3,6 @@ import { Card as NextCard, CardBody } from '@nextui-org/react';
 import { PropsWithChildren } from 'react';
 import CardWrapper from './CardWrapper';
 import CardList from './CardList';
-import CardListItem from './CardListItem';
 
 export interface CardProps {
     className?: string;
@@ -15,6 +14,5 @@ const Card = ({ className, children }: PropsWithChildren<CardProps>) => {
 
 Card.Wrapper = CardWrapper;
 Card.List = CardList;
-Card.ListItem = CardListItem;
 
 export default Card;

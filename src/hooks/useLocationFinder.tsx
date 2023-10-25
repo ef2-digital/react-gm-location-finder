@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
-import type { Bounds, Center, Location } from 'src/types';
-import { offsetCenter } from 'src/utils/helpers';
-import usePagination from './usePagination';
-import { get } from 'http';
+import type { Bounds, Location } from 'src/types';
+import { calculateDistance, offsetCenter } from 'src/utils/helpers';
 
 const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
     if (bounds instanceof google.maps.LatLngBounds) {
@@ -35,7 +33,6 @@ const useLocationFinder = <T extends Object>() => {
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
     const [previousZoom, setPreviousZoom] = useState<number>(defaultZoom);
     const [selectedLocation, setSelectedLocation] = useState<Location<T> | undefined>(undefined);
-    const { getPage, loadMore } = usePagination<T>();
 
     // Methods.
     const handleOnLoad = useCallback((map: google.maps.Map) => {
@@ -53,15 +50,26 @@ const useLocationFinder = <T extends Object>() => {
         }
 
         const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
 
         if (bounds) {
-            setListLocations(getPage(locations, getBounds(bounds)));
-        }
-    };
+            const listLocations = locations.filter((location) => bounds.contains(location.position));
 
-    const handleLoadMoreListLocations = () => {
-        loadMore();
-        refine();
+            if (center && zoom && zoom > 10) {
+                const sortedListLocations = listLocations
+                    .map((location) => ({ ...location, distance: calculateDistance(center, location.position) }))
+                    .sort((a, b) => a.distance - b.distance);
+
+                setListLocations(sortedListLocations);
+            } else {
+                setListLocations(listLocations);
+            }
+        }
+
+        if (center) {
+            setDefaultCenter(center);
+        }
     };
 
     const reset = (map: google.maps.Map) => {
@@ -161,8 +169,7 @@ const useLocationFinder = <T extends Object>() => {
         onLoad: handleOnLoad,
         onChange: handleOnChange,
         onLocationClick: handleOnLocationClick,
-        onBackClick: handleOnBackClick,
-        loadMoreListLocations: handleLoadMoreListLocations
+        onBackClick: handleOnBackClick
     };
 };
 

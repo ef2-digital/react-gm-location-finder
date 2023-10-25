@@ -31,7 +31,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         [setAutocomplete]
     );
 
-    const handleOnPlaceChanged = useCallback(() => {
+    const handleOnPlaceChanged = () => {
         if (!autocomplete) {
             return;
         }
@@ -54,7 +54,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         }
 
         handleOnButtonClick();
-    }, [setDefaultCenter, setDefaultZoom, autocomplete]);
+    };
 
     const handleOnButtonClick = useCallback(() => {
         const value = inputRef.current?.value;

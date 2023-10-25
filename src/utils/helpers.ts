@@ -28,7 +28,8 @@ export const calculateDistance = (
     from: google.maps.LatLng | google.maps.LatLngLiteral,
     to: google.maps.LatLng | google.maps.LatLngLiteral
 ): number => {
-    return google.maps.geometry?.spherical.computeDistanceBetween(from, to) / 1000;
+    const distance = google.maps.geometry?.spherical.computeDistanceBetween(from, to);
+    return distance ? distance / 1000 : 0;
 };
 
 export const offsetCenter = (
