@@ -67,13 +67,17 @@ export const LocationFinderProvider = <T extends object = {}>({
 
     // TODO make code optional with options.
     useEffect(() => {
+        if (!navigator.geolocation) {
+            return;
+        }
+
         navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
             setCurrentLocation({
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             });
         });
-    }, [map, navigator, setCurrentLocation]);
+    }, [map, setCurrentLocation]);
 
     // Render.
     return (
