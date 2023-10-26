@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import { Bounds, Center } from 'src/types';
 
@@ -11,13 +11,14 @@ export interface PlacesFinderProps {
 
 export interface PlacesFinderOptions {
     zoomAfterPlaceChanged?: number;
+    showCurrentLocation?: boolean;
 }
 
 const DEFAULT_ZOOM_AFTER_PLACE_CHANGED = 12;
 
 const usePlacesFinder = (options?: PlacesFinderOptions) => {
     // Hooks.
-    const { setDefaultCenter, setDefaultBounds, setDefaultZoom, setDefaultSearch } = useLocationFinderContext();
+    const { setDefaultCenter, currentLocation, map, setDefaultBounds, setDefaultZoom, setDefaultSearch } = useLocationFinderContext();
 
     // State.
     const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | undefined>(undefined);
@@ -64,18 +65,14 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         }
     }, [setDefaultSearch]);
 
-    const handleOnCurrentLocationClick = useCallback(() => {
-        navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
-            const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
-            const newCenter = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
+    const handleOnCurrentLocationClick = () => {
+        const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
 
-            setDefaultCenter(newCenter);
+        if (currentLocation) {
+            setDefaultCenter(currentLocation);
             setDefaultZoom(newZoom);
-        });
-    }, [navigator.geolocation, setDefaultCenter, setDefaultZoom]);
+        }
+    };
 
     return {
         inputRef,

@@ -1,12 +1,15 @@
-import { createContext, PropsWithChildren, ReactNode, useContext, useState } from 'react';
+import { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useState } from 'react';
 import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 
 // Context.
 export interface LocationFinderContextValue<T extends object = {}> {
+    map?: google.maps.Map;
     defaultZoom: number;
     defaultCenter: Center;
     defaultBounds: Bounds;
     defaultSearch?: string;
+
+    currentLocation?: Center;
 
     loading: boolean;
     locations: Location<T>[];
@@ -17,6 +20,8 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setDefaultBounds: (bounds: Bounds) => void;
     setDefaultSearch: (search: string) => void;
     setListLocations: (locations: Location<T>[]) => void;
+    setCurrentLocation: (center: Center) => void;
+    setMap: (map: google.maps.Map) => void;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
@@ -24,6 +29,8 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     defaultCenter: DEFAULT_CENTER,
     defaultBounds: DEFAULT_BOUNDS,
     defaultSearch: undefined,
+
+    currentLocation: undefined,
 
     loading: true,
     locations: [],
@@ -33,7 +40,9 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setDefaultCenter: () => {},
     setDefaultBounds: () => {},
     setDefaultSearch: () => {},
-    setListLocations: () => {}
+    setListLocations: () => {},
+    setCurrentLocation: () => {},
+    setMap: () => {}
 });
 
 export interface LocationFinderProps<T extends object = {}> {
@@ -48,11 +57,23 @@ export const LocationFinderProvider = <T extends object = {}>({
     children
 }: PropsWithChildren<LocationFinderProps<T>>) => {
     // Context.
+    const [map, setMap] = useState<google.maps.Map>();
     const [defaultZoom, setDefaultZoom] = useState<number>(DEFAULT_ZOOM);
     const [defaultCenter, setDefaultCenter] = useState<Center>(DEFAULT_CENTER);
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
+    const [currentLocation, setCurrentLocation] = useState<Center | undefined>(undefined);
+
+    // TODO make code optional with options.
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
+            setCurrentLocation({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            });
+        });
+    }, [map, navigator, setCurrentLocation]);
 
     // Render.
     return (
@@ -66,10 +87,14 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setDefaultBounds,
                 setDefaultCenter,
                 setDefaultSearch,
+                setMap,
+                map,
                 loading,
                 locations,
                 listLocations,
-                setListLocations
+                setListLocations,
+                currentLocation,
+                setCurrentLocation
             }}
         >
             {children}

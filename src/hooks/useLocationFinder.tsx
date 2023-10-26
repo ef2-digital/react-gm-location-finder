@@ -18,18 +18,22 @@ const useLocationFinder = <T extends Object>() => {
         defaultZoom,
         defaultCenter,
         defaultSearch,
+        currentLocation,
         setDefaultBounds,
         setDefaultCenter,
         setDefaultSearch,
         setDefaultZoom,
         setListLocations,
+        setCurrentLocation,
         locations,
         listLocations,
-        loading
+        loading,
+        map,
+        setMap
     } = useLocationFinderContext<T>();
 
     // State.
-    const [map, setMap] = useState<google.maps.Map>();
+
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
     const [previousZoom, setPreviousZoom] = useState<number>(defaultZoom);
     const [selectedLocation, setSelectedLocation] = useState<Location<T> | undefined>(undefined);
@@ -69,6 +73,10 @@ const useLocationFinder = <T extends Object>() => {
 
         if (center) {
             setDefaultCenter(center);
+        }
+
+        if (zoom) {
+            setDefaultZoom(zoom);
         }
     };
 
@@ -153,6 +161,7 @@ const useLocationFinder = <T extends Object>() => {
         listLocations,
         selectedLocation,
         setSelectedLocation,
+        currentLocation,
 
         defaultBounds,
         defaultCenter,
@@ -163,6 +172,7 @@ const useLocationFinder = <T extends Object>() => {
         setDefaultCenter,
         setDefaultSearch,
         setDefaultZoom,
+        setCurrentLocation,
 
         refine,
         onIdle: handleOnIdle,
