@@ -64,11 +64,25 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         }
     }, [setDefaultSearch]);
 
+    const handleOnCurrentLocationClick = useCallback(() => {
+        navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
+            const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
+            const newCenter = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            setDefaultCenter(newCenter);
+            setDefaultZoom(newZoom);
+        });
+    }, [navigator.geolocation, setDefaultCenter, setDefaultZoom]);
+
     return {
         inputRef,
         onLoad: handleOnLoad,
         onPlaceChanged: handleOnPlaceChanged,
-        onButtonClick: handleOnButtonClick
+        onButtonClick: handleOnButtonClick,
+        onCurrentLocationClick: handleOnCurrentLocationClick
     };
 };
 

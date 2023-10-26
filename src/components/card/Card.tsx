@@ -1,5 +1,5 @@
 import { classNamesTailwind } from 'src/utils/helpers';
-import { Card as NextCard, CardBody } from '@nextui-org/react';
+import { Card as NextCard } from '@nextui-org/react';
 import { PropsWithChildren } from 'react';
 import CardWrapper from './CardWrapper';
 import CardList from './CardList';
