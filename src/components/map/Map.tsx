@@ -13,7 +13,7 @@ const CONTAINER_CLASS_NAME = 'w-full relative z-0 h-[60vh] min-h-[25rem] md:h-sc
 const Map = ({ children, mapContainerClassName, onLoad, onIdle, onDragEnd, onZoomChanged, ...props }: PropsWithChildren<MapProps>) => {
     // Hooks.
     const { defaultCenter, defaultZoom } = useLocationFinderContext();
-    const { onChange, onIdle: onIdleLocationFinder, onLoad: onLoadLocationFinder, loading } = useLocationFinder();
+    const { onChange, onIdle: onIdleLocationFinder, onLoad: onLoadLocationFinder, loading, setPage } = useLocationFinder();
 
     const className = useMemo(() => classNamesTailwind(CONTAINER_CLASS_NAME, mapContainerClassName), [mapContainerClassName]);
 
@@ -21,6 +21,7 @@ const Map = ({ children, mapContainerClassName, onLoad, onIdle, onDragEnd, onZoo
     const handleOnLoad = (map: google.maps.Map) => {
         onLoad?.(map);
         onLoadLocationFinder(map);
+        setPage(0);
     };
 
     const handleOnIdle = () => {

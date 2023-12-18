@@ -6,23 +6,10 @@ import * as MapStories from './Map.stories';
 
 <Meta of={MapStories} />
 
-## Imports
-<Source code={`
-import { Map, Card, useLocationFinder } from '@ef2/react-gm-location-finder';
-`}/>
-
-## Imports (NextUI)
-<Source code={`
-import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Button, Skeleton } from '@nextui-org/react';
-`}/>
-
 ### 1. Create a Search component.
 <Source code={`
-// NextUI.
-import { Input, Skeleton } from '@nextui-org/react';
-
-// Google Maps.
-import { Autocomplete } from '@react-google-maps/api';
+import { Input, Skeleton } from '@nextui-org/react'; // NextUI.
+import { Autocomplete } from '@react-google-maps/api'; // Google Maps.
 
 const Search = () => {
     const { defaultSearch, loading } = useLocationFinder();
@@ -41,4 +28,80 @@ const Search = () => {
 export default Search;
 `}/>
 
+### 2. Create a Map component.
+<Source code={`
+import { Map, Card, useLocationFinder } from '@ef2/react-gm-location-finder';
+import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Button, CardHeader } from '@nextui-org/react'; // NextUI.
+
+const Map = () => {
+    // With opening hours.
+    const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder<LocationOpeningHours>();
+    const { pagedListLocations, onButtonClick, hasMore } = useLoadMore<LocationOpeningHours>();
+    
+    // Without opening hours.
+    // const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder();
+    // const { pagedListLocations, onButtonClick, hasMore } = useLoadMore();
+    
+    // Methods.
+    const handleOnLocationClick = (key: Key) => {
+        onLocationClick(key as string);
+    };
+
+    return (
+        <>
+            {/* Replace 500px with the disired height (md:h-screen). */}
+            <Map mapContainerClassName="h-[500px] md:h-[500px]" />
+            <Map.Content classNameContainer="px-0 max-w-full md:container md:px-4">
+                {/* Replace 500px with the disired height (100vh). */}
+                <Card.Wrapper className="md:mt-8 md:mb-8 md:h-[calc(500px-4rem)]">
+                    <Card>
+                        {!selectedLocation ? (
+                            <>
+                                <CardHeader className="bg-primary">
+                                    <Search />
+                                </CardHeader>
+                                <CardBody>
+                                    <ScrollShadow className="h-full" hideScrollBar>
+                                        <Listbox onAction={handleOnLocationClick}>
+                                            {pagedListLocations.map((location) => (
+                                                <ListboxItem key={location.id}>{location.id}</ListboxItem>
+                                            ))}
+                                        </Listbox>
+                                    </ScrollShadow>
+                                </CardBody>
+                                <CardFooter className="flex-none">
+                                    <Button color="primary" className="w-full" isDisabled={!hasMore} onPress={onButtonClick}>
+                                        Laad meer
+                                    </Button>
+                                </CardFooter>
+                            </>
+                        ) : (
+                            <>
+                                <CardHeader className="bg-primary">
+                                    <span>{selectedLocation.id}</span>
+                                </CardHeader>
+                                <CardBody>
+                                    <ScrollShadow className="h-full" hideScrollBar>
+                                        {selectedLocation && <OpeningHours location={selectedLocation} />}
+                                    </ScrollShadow>
+                                </CardBody>
+                                <CardFooter className="flex-none">
+                                    <Button className="w-full" color="primary" onClick={onBackClick}>
+                                        Back
+                                    </Button>
+                                </CardFooter>
+                            </>
+                        )}
+                    </Card>
+                </Card.Wrapper>
+            </Map.Content>
+        </>
+    );
+};
+
+export default Map;
+`}/>
+
 <Canvas of={MapStories.Primary} />
+
+### 3. Extend content.

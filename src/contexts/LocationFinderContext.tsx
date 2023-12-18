@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
 import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 
 // Context.
@@ -22,6 +22,10 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setListLocations: (locations: Location<T>[]) => void;
     setCurrentLocation: (center: Center) => void;
     setMap: (map: google.maps.Map) => void;
+
+    // Load more functionality.
+    page: number;
+    setPage: Dispatch<SetStateAction<number>>;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
@@ -42,7 +46,10 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setDefaultSearch: () => {},
     setListLocations: () => {},
     setCurrentLocation: () => {},
-    setMap: () => {}
+    setMap: () => {},
+    // Load more functionality.
+    page: 0,
+    setPage: () => {},
 });
 
 export interface LocationFinderProps<T extends object = {}> {
@@ -64,6 +71,9 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
     const [currentLocation, setCurrentLocation] = useState<Center | undefined>(undefined);
+
+    // - Load more functionality.
+    const [page, setPage] = useState<number>(0);
 
     // TODO make code optional with options.
     useEffect(() => {
@@ -98,7 +108,10 @@ export const LocationFinderProvider = <T extends object = {}>({
                 listLocations,
                 setListLocations,
                 currentLocation,
-                setCurrentLocation
+                setCurrentLocation,
+                // - Load more functionality.
+                page,
+                setPage,
             }}
         >
             {children}

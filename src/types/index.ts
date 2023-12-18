@@ -4,6 +4,28 @@ export type Location<T extends object = {}> = T & {
     distance?: number;
 };
 
+export type LocationOpeningHours = {
+    openingHours?: OpeningHours;
+};
+
+export type OpeningHours = {
+    days: OpeningHoursDays;
+}
+
+export type OpeningHoursDays = {
+    [key: number]: OpeningHoursDaysDay;
+}
+
+export type OpeningHoursDaysDay = {
+    closed?: boolean;
+    slots: OpeningHoursDaysDaySlot[];
+}
+
+export type OpeningHoursDaysDaySlot = {
+    from: Date;
+    to: Date;
+}
+
 export const DEFAULT_ZOOM = 8;
 
 export const DEFAULT_CENTER: google.maps.LatLngLiteral = {

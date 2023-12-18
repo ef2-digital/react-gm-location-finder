@@ -29,7 +29,8 @@ const useLocationFinder = <T extends Object>() => {
         listLocations,
         loading,
         map,
-        setMap
+        setMap,
+        setPage,
     } = useLocationFinderContext<T>();
 
     // State.
@@ -179,7 +180,9 @@ const useLocationFinder = <T extends Object>() => {
         onLoad: handleOnLoad,
         onChange: handleOnChange,
         onLocationClick: handleOnLocationClick,
-        onBackClick: handleOnBackClick
+        onBackClick: handleOnBackClick,
+
+        setPage
     };
 };
 

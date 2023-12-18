@@ -3,15 +3,47 @@ import type { Preview } from '@storybook/react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 import '../src/index.css';
+import { Location, LocationOpeningHours } from '../src/types';
 import { LocationFinderProvider } from '../src/contexts/LocationFinderContext';
 import { NextUIProvider } from '@nextui-org/react';
 
-const locations = [
+const locations: Location<LocationOpeningHours>[] = [
     {
         id: '0',
         position: {
             lat: 52.370216,
             lng: 4.895168
+        },
+        openingHours: {
+            days: {
+                0: {
+                    closed: false,
+                    slots: [
+                        {
+                            from: new Date(),
+                            to: new Date()
+                        },
+                    ]
+                },
+                1: {
+                    closed: false,
+                    slots: [
+                        {
+                            from: new Date(),
+                            to: new Date()
+                        },
+                    ]
+                },
+                2: {
+                    closed: false,
+                    slots: [
+                        {
+                            from: new Date(),
+                            to: new Date()
+                        },
+                    ]
+                }
+            }
         }
     },
     {

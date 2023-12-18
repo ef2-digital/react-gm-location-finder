@@ -8,7 +8,7 @@ export interface CardProps {
 }
 
 const Card = ({ className, children }: PropsWithChildren<CardProps>) => {
-    return <NextCard className={classNamesTailwind('visible', className)}>{children}</NextCard>;
+    return <NextCard className={classNamesTailwind('visible overflow-visible h-full md:overflow-hidden shadow-none', className)}>{children}</NextCard>;
 };
 
 Card.Wrapper = CardWrapper;
