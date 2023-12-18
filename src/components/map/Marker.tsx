@@ -2,7 +2,7 @@ import { Marker as GoogleMapMarker, MarkerProps as GoogleMapMarkerProps } from '
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import { Location } from 'src/types';
 
-interface MarkerProps extends Omit<GoogleMapMarkerProps, 'position' | 'onClick'> {
+export interface MarkerProps extends Omit<GoogleMapMarkerProps, 'position' | 'onClick'> {
     location: Location;
 }
 

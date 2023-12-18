@@ -3,7 +3,7 @@ import type { Preview } from '@storybook/react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 import '../src/index.css';
-import { LocationFinderProvider } from '../src/hooks/useLocationFinder';
+import { LocationFinderProvider } from '../src/contexts/LocationFinderContext';
 import { NextUIProvider } from '@nextui-org/react';
 
 const locations = [

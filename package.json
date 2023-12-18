@@ -82,5 +82,8 @@
   "bugs": {
     "url": "https://github.com/ef2-digital/react-gm-location-finder/issues"
   },
-  "homepage": "https://ef2.nl"
+  "homepage": "https://ef2.nl",
+  "resolutions": {
+    "jackspeak": "2.1.1"
+  }
 }

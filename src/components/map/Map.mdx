@@ -8,8 +8,37 @@ import * as MapStories from './Map.stories';
 
 ## Imports
 <Source code={`
-import { Map, Card } from '@ef2/react-gm-location-finder';
-import { CardBody, ListboxItem, Input } from '@nextui-org/react';
+import { Map, Card, useLocationFinder } from '@ef2/react-gm-location-finder';
+`}/>
+
+## Imports (NextUI)
+<Source code={`
+import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Button, Skeleton } from '@nextui-org/react';
+`}/>
+
+### 1. Create a Search component.
+<Source code={`
+// NextUI.
+import { Input, Skeleton } from '@nextui-org/react';
+
+// Google Maps.
+import { Autocomplete } from '@react-google-maps/api';
+
+const Search = () => {
+    const { defaultSearch, loading } = useLocationFinder();
+
+    if (loading) {
+        return <Skeleton className="h-9 rounded-md" />;
+    }
+
+    return (
+        <Autocomplete>
+            <Input classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
+        </Autocomplete>
+    );
+};
+
+export default Search;
 `}/>
 
 <Canvas of={MapStories.Primary} />

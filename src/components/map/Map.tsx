@@ -1,10 +1,9 @@
 import { GoogleMap, GoogleMapProps } from '@react-google-maps/api';
-import { PropsWithChildren, useCallback, useMemo } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import Marker from './Marker';
 import MapContent from './MapContent';
 import { classNamesTailwind } from 'src/utils/helpers';
-import { DEFAULT_BOUNDS } from 'src/types';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 
 export interface MapProps extends GoogleMapProps {}
