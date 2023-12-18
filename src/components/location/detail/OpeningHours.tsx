@@ -15,7 +15,7 @@ const OpeningHours = ({ openingHours }: { openingHours: OpeningHoursDaysType }) 
         openingHoursLabel = 'Openingstijden',
         dayLabel = 'Dag',
         timeLabel = 'Tijd',
-        hoursLabel = 'Uur',
+        hoursLabel = 'uur',
         closedLabel = 'Gesloten'
     } = labels ?? {};
 

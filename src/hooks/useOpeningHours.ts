@@ -35,7 +35,8 @@ export const useOpeningHours = () => {
     const date = new Date();
     const day = date.getDay();
     const hours = date.getHours();
-    const zeroPad = (num: number) => String(num).padStart(2, '0');
+    
+    const zeroPad = (num: number | string) => (parseInt(num as string) < 10 ? '0' : '') + num;
 
     const getOpeningHoursSlot = (openingHours: OpeningHoursType) => {
         const currentOpeningHour = openingHours ? openingHours.days && openingHours.days[day] : undefined;
