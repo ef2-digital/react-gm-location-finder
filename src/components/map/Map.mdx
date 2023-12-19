@@ -6,29 +6,11 @@ import * as MapStories from './Map.stories';
 
 <Meta of={MapStories} />
 
-### 1. Create a Search component.
-<Source code={`
-import { Input, Skeleton } from '@nextui-org/react'; // NextUI.
-import { Autocomplete } from '@react-google-maps/api'; // Google Maps.
+# Map component
+## 1. Create a Search component.
+[Search component](?path=/docs/map-search--docs)
 
-const Search = () => {
-    const { defaultSearch, loading } = useLocationFinder();
-
-    if (loading) {
-        return <Skeleton className="h-9 rounded-md" />;
-    }
-
-    return (
-        <Autocomplete>
-            <Input classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
-        </Autocomplete>
-    );
-};
-
-export default Search;
-`}/>
-
-### 2. Create a Map component.
+## 2. Create a Map component.
 <Source code={`
 import { Map, Card, useLocationFinder } from '@ef2/react-gm-location-finder';
 import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Button, CardHeader } from '@nextui-org/react'; // NextUI.
@@ -41,7 +23,7 @@ const Map = () => {
     // Without opening hours.
     // const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder();
     // const { pagedListLocations, onButtonClick, hasMore } = useLoadMore();
-    
+
     // Methods.
     const handleOnLocationClick = (key: Key) => {
         onLocationClick(key as string);
@@ -64,7 +46,10 @@ const Map = () => {
                                     <ScrollShadow className="h-full" hideScrollBar>
                                         <Listbox onAction={handleOnLocationClick}>
                                             {pagedListLocations.map((location) => (
-                                                <ListboxItem key={location.id}>{location.id}</ListboxItem>
+                                                <ListboxItem key={location.id}>
+                                                    {location.id}
+                                                    <OpeningHourLabel location={location} />
+                                                </ListboxItem>
                                             ))}
                                         </Listbox>
                                     </ScrollShadow>
@@ -100,8 +85,28 @@ const Map = () => {
 };
 
 export default Map;
-`}/>
+`} />
 
 <Canvas of={MapStories.Primary} />
 
-### 3. Extend content.
+## 3. Extend content.
+<Source code={`
+// 1. create a interface.
+interface LocationProject {
+    name: string;
+    address: string;
+}
+
+// 2. extend the useLocationFinder hook.
+const { xx } = useLocationFinder<LocationProject>();
+
+// 3. extend the useLoadMore hook.
+const { xx } = useLoadMore<LocationProject>();
+
+// In combination with opening hours.
+interface LocationProject extends LocationOpeningHours {
+    name: string;
+    address: string;
+}
+
+`} />

@@ -1,0 +1,30 @@
+{/* Search.mdx */}
+
+import { Meta } from '@storybook/blocks';
+import { Canvas,  Source } from '@storybook/blocks';
+
+<Meta title="Map/Search" />
+
+# Search component
+
+<Source code={`
+import { Input, Skeleton } from '@nextui-org/react'; // NextUI.
+import { Autocomplete } from '@react-google-maps/api'; // Google Maps.
+
+const Search = () => {
+    const { defaultSearch, loading } = useLocationFinder();
+    const { onPlaceChanged, onLoad, inputRef } = usePlacesFinder();
+
+    if (loading) {
+        return <Skeleton className="h-9 rounded-md" />;
+    }
+
+    return (
+        <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+            <Input ref={inputRef} classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
+        </Autocomplete>
+    );
+};
+
+export default Search;
+`}/>

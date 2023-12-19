@@ -1,0 +1,41 @@
+{/* Places.mdx */}
+
+import { Meta } from '@storybook/blocks';
+import { Canvas, Source } from '@storybook/blocks';
+
+<Meta title="Map/Places" />
+
+# Places component
+
+## 1. Create a Search component.
+
+[Search component](?path=/docs/map-search--docs)
+
+## 2. Create a Places component.
+TODO
+<Source
+    code={`
+const { onButtonClick } = usePlacesFinder();
+const { currentLocation } = useLocationFinderContext();
+
+const router = useRouter();
+
+// Methods.
+const navigate = useCallback(
+    () => {
+        router.push('/locations');
+    },
+    [router]
+);
+
+const handleOnButtonClick = useCallback(() => {
+    onButtonClick();
+    navigate();
+}, [onButtonClick, navigate]);
+
+<div>
+    <Search />
+    <Button onPress={handleOnButtonClick}>Zoeken</Button>
+</div>
+    `}
+/>

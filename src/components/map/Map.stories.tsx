@@ -12,7 +12,7 @@ import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Skeleton, Button, 
 // Google Maps.
 import { Autocomplete } from '@react-google-maps/api';
 import { LocationOpeningHours } from 'src/types';
-import { OpeningHours } from '../content';
+import { OpeningHourLabel, OpeningHours } from '../content';
 import { useLoadMore } from 'src/hooks';
 
 const meta = {
@@ -64,7 +64,10 @@ export const Primary: Story = {
                                         <ScrollShadow className="h-full" hideScrollBar>
                                             <Listbox onAction={handleOnLocationClick}>
                                                 {pagedListLocations.map((location) => (
-                                                    <ListboxItem key={location.id}>{location.id}</ListboxItem>
+                                                    <ListboxItem key={location.id}>
+                                                        {location.id}
+                                                        <OpeningHourLabel location={location} />
+                                                    </ListboxItem>
                                                 ))}
                                             </Listbox>
                                         </ScrollShadow>

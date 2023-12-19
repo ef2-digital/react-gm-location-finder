@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import { Bounds, Center } from 'src/types';
+import { offsetCenter } from 'src/utils/helpers';
 
 export interface PlacesFinderProps {
     setDefaultZoom: (zoom: number) => void;
@@ -33,7 +34,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
     );
 
     const handleOnPlaceChanged = () => {
-        if (!autocomplete) {
+        if (!autocomplete || !map) {
             return;
         }
 
@@ -47,7 +48,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
         const newCenter = geometry.location;
 
-        setDefaultCenter(newCenter);
+        setDefaultCenter(offsetCenter(map, newCenter));
         setDefaultZoom(newZoom);
 
         if (geometry.viewport) {

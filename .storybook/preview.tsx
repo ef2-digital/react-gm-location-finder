@@ -6,6 +6,7 @@ import '../src/index.css';
 import { Location, LocationOpeningHours } from '../src/types';
 import { LocationFinderProvider } from '../src/contexts/LocationFinderContext';
 import { NextUIProvider } from '@nextui-org/react';
+import { setHours } from 'date-fns';
 
 const locations: Location<LocationOpeningHours>[] = [
     {
@@ -20,27 +21,27 @@ const locations: Location<LocationOpeningHours>[] = [
                     closed: false,
                     slots: [
                         {
-                            from: new Date(),
-                            to: new Date()
-                        },
+                            from: setHours(new Date(), 9),
+                            to: setHours(new Date(), 17)
+                        }
                     ]
                 },
                 1: {
                     closed: false,
                     slots: [
                         {
-                            from: new Date(),
-                            to: new Date()
-                        },
+                            from: setHours(new Date(), 9),
+                            to: setHours(new Date(), 17)
+                        }
                     ]
                 },
                 2: {
                     closed: false,
                     slots: [
                         {
-                            from: new Date(),
-                            to: new Date()
-                        },
+                            from: setHours(new Date(), 9),
+                            to: setHours(new Date(), 17)
+                        }
                     ]
                 }
             }
