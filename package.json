@@ -1,7 +1,7 @@
 {
   "name": "@ef2/react-gm-location-finder",
   "private": false,
-  "version": "0.9.18",
+  "version": "0.9.19",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,7 +27,8 @@
     "framer-motion": "^10.16.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tailwind-merge": "^1.14.0"
+    "tailwind-merge": "^1.14.0",
+    "usehooks-ts": "^2.9.1"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^7.5.0-alpha.2",
