@@ -7,19 +7,22 @@ import * as MapStories from './Map.stories';
 <Meta of={MapStories} />
 
 # Map component
+
 ## 1. Create a Search component.
+
 [Search component](?path=/docs/map-search--docs)
 
 ## 2. Create a Map component.
+
 <Source code={`
 import { Map, Card, useLocationFinder } from '@ef2/react-gm-location-finder';
 import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Button, CardHeader } from '@nextui-org/react'; // NextUI.
 
 const Map = () => {
-    // With opening hours.
-    const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder<LocationOpeningHours>();
-    const { pagedListLocations, onButtonClick, hasMore } = useLoadMore<LocationOpeningHours>();
-    
+// With opening hours.
+const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder<LocationOpeningHours>();
+const { pagedListLocations, onButtonClick, hasMore } = useLoadMore<LocationOpeningHours>();
+
     // Without opening hours.
     // const { listLocations, onLocationClick, selectedLocation, onBackClick } = useLocationFinder();
     // const { pagedListLocations, onButtonClick, hasMore } = useLoadMore();
@@ -32,7 +35,9 @@ const Map = () => {
     return (
         <>
             {/* Replace 500px with the disired height (md:h-screen). */}
-            <Map mapContainerClassName="h-[500px] md:h-[500px]" />
+            <Map mapContainerClassName="h-[500px] md:h-[500px]">
+                <Markers />
+            </Map>
             <Map.Content classNameContainer="px-0 max-w-full md:container md:px-4">
                 {/* Replace 500px with the disired height (100vh). */}
                 <Card.Wrapper className="md:mt-8 md:mb-8 md:h-[calc(500px-4rem)]">
@@ -82,6 +87,7 @@ const Map = () => {
             </Map.Content>
         </>
     );
+
 };
 
 export default Map;
@@ -90,6 +96,7 @@ export default Map;
 <Canvas of={MapStories.Primary} />
 
 ## 3. Extend content.
+
 <Source code={`
 // 1. create a interface.
 interface LocationProject {
@@ -105,8 +112,8 @@ const { xx } = useLoadMore<LocationProject>();
 
 // In combination with opening hours.
 interface LocationProject extends LocationOpeningHours {
-    name: string;
-    address: string;
+name: string;
+address: string;
 }
 
 `} />
