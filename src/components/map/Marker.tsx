@@ -1,4 +1,4 @@
-import { Marker as GoogleMapMarker, MarkerProps as GoogleMapMarkerProps } from '@react-google-maps/api';
+import { MarkerF as GoogleMapMarker, MarkerProps as GoogleMapMarkerProps } from '@react-google-maps/api';
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import { Location } from 'src/types';
 
