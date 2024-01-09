@@ -13,7 +13,7 @@ import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Skeleton, Button, 
 import { Autocomplete } from '@react-google-maps/api';
 import { LocationOpeningHours } from 'src/types';
 import { OpeningHourLabel, OpeningHours } from '../content';
-import { useLoadMore } from 'src/hooks';
+import { useLoadMore, usePlacesFinder } from 'src/hooks';
 
 const meta = {
     title: 'map/Map',
@@ -25,14 +25,15 @@ type Story = StoryObj<typeof Map>;
 
 const Search = () => {
     const { defaultSearch, loading } = useLocationFinder();
+    const { onPlaceChanged, onLoad, inputRef } = usePlacesFinder();
 
     if (loading) {
         return <Skeleton className="h-9 rounded-md" />;
     }
 
     return (
-        <Autocomplete className="w-full">
-            <Input classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
+        <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+            <Input ref={inputRef} classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
         </Autocomplete>
     );
 };
