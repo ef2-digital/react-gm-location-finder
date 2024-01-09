@@ -1,6 +1,4 @@
-import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import Marker from './Marker';
-import { MarkerProps } from '@react-google-maps/api';
 import { useEffect } from 'react';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
 import { Location } from 'src/types';
