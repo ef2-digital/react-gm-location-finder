@@ -1,4 +1,4 @@
-import { startOfWeek, addDays } from 'date-fns';
+import { startOfWeek, addDays, parse } from 'date-fns';
 import { OpeningHoursDaysType, OpeningHoursType } from '../contexts/locationFinderContext';
 
 export enum Enum_OpeninghoursDay {
@@ -35,7 +35,7 @@ export const useOpeningHours = () => {
     const date = new Date();
     const day = date.getDay();
     const hours = date.getHours();
-    
+
     const zeroPad = (num: number | string) => (parseInt(num as string) < 10 ? '0' : '') + num;
 
     const getOpeningHoursSlot = (openingHours: OpeningHoursType) => {
@@ -57,9 +57,10 @@ export const useOpeningHours = () => {
     };
 
     const formatTime = (timeString: string): { hours: number; minutes: number } => {
-        const time: Date = new Date(`1/01/1970 ${timeString}`);
-        const hours: number = time.getHours();
-        const minutes: number = time.getMinutes();
+        const date = parse(timeString, 'HH:mm:ss.SSS', new Date());
+        const hours: number = date.getHours();
+        const minutes: number = date.getMinutes();
+
         return { hours, minutes };
     };
 
