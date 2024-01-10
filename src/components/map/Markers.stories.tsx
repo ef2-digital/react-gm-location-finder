@@ -10,23 +10,47 @@ const meta = {
 } satisfies Meta<typeof Markers>;
 
 export default meta;
-type Story = StoryObj<typeof Map>;
+type Story = StoryObj<typeof Markers>;
 
 export const Primary: Story = {
-    render: () => {
+    render: (args) => {
         return (
             <Map>
-                <Markers />
+                <Markers {...args} />
             </Map>
         );
     }
 };
 
 export const Cluster: Story = {
-    render: () => {
+    args: {
+        cluster: {
+            enabled: true,
+            maxZoom: 16,
+            minZoom: 7
+        }
+    },
+    render: (args) => {
         return (
             <Map>
-                <Markers cluster={{ enabled: true, maxZoom: 16, minZoom: 7 }} />
+                <Markers {...args} />
+            </Map>
+        );
+    }
+};
+
+export const Custom: Story = {
+    args: {
+        cluster: {
+            enabled: true,
+            maxZoom: 16,
+            minZoom: 7
+        }
+    },
+    render: (args) => {
+        return (
+            <Map>
+                <Markers {...args} />
             </Map>
         );
     }

@@ -39,7 +39,11 @@ const Search = () => {
 };
 
 export const Primary: Story = {
-    render: () => {
+    args: {
+        // Replace 500px with the disired height (md:h-screen).
+        mapContainerClassName: 'h-[500px] md:h-[500px]'
+    },
+    render: (args) => {
         const { onLocationClick, selectedLocation, onBackClick } = useLocationFinder<LocationOpeningHours>();
         const { pagedListLocations, onButtonClick, hasMore } = useLoadMore<LocationOpeningHours>();
 
@@ -49,9 +53,8 @@ export const Primary: Story = {
         };
 
         return (
-            <>
-                {/* Replace 500px with the disired height (md:h-screen). */}
-                <Map mapContainerClassName="h-[500px] md:h-[500px]">
+            <div className="relative">
+                <Map {...args}>
                     <Markers />
                 </Map>
                 <Map.Content classNameContainer="px-0 max-w-full md:container md:px-4">
@@ -101,7 +104,7 @@ export const Primary: Story = {
                         </Card>
                     </Card.Wrapper>
                 </Map.Content>
-            </>
+            </div>
         );
     }
 };

@@ -52,6 +52,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         setDefaultZoom(newZoom);
 
         if (geometry.viewport) {
+            // TODO offset bounds.
             setDefaultBounds(geometry.viewport);
         }
 
