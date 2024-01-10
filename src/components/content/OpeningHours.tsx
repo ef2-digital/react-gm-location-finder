@@ -33,20 +33,20 @@ const getSlot = (slot: OpeningHoursDaysDaySlot) => {
     return `${format(slot.from, 'HH:mm')} - ${format(slot.to, 'HH:mm')}`;
 };
 
-const getTime = (day: OpeningHoursDaysDay, closedLabel: string): string => {
+const getTime = (day: OpeningHoursDaysDay, labelClosed: string, labelHour: string): string => {
     if (day.closed || day.slots.length === 0) {
-        return closedLabel;
+        return labelClosed;
     }
 
-    return day.slots.map(getSlot).join(', ');
+    return `${day.slots.map(getSlot).join(', ')} ${labelHour}`;
 };
 
 const OpeningHours = ({
     location,
     labelClosed = 'Gesloten',
-    labelDay = 'Dag',
+    labelDay = 'Openingstijden',
     labelHour = 'uur',
-    labelTime = 'Tijd',
+    labelTime = '',
     classNamesTable
 }: OpeningHoursProps) => {
     if (!location.openingHours) {
@@ -69,7 +69,7 @@ const OpeningHours = ({
             .map(([key, day]) => {
                 return {
                     day: getFullDayName(parseInt(key)),
-                    time: `${getTime(day, labelClosed)} ${labelHour}`
+                    time: getTime(day, labelClosed, labelHour)
                 };
             });
     }, [location.openingHours]);

@@ -3,18 +3,19 @@ import { useEffect } from 'react';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
 import { Location } from 'src/types';
 import { useLocationFinder } from 'src/hooks';
+import { MarkerProps } from '@react-google-maps/api';
 
 export interface MarkersProps {
-    icon?: google.maps.Icon;
+    marker?: Omit<MarkerProps, 'position'>;
     cluster?: {
         enabled: boolean;
-        icon?: google.maps.Icon;
+        marker?: Omit<MarkerProps, 'position'>;
         minZoom: number;
         maxZoom: number;
     };
 }
 
-const Markers = ({ icon, cluster }: MarkersProps) => {
+const Markers = ({ marker, cluster }: MarkersProps) => {
     const { locations, loading, map, onLocationClick } = useLocationFinder();
 
     if (loading) {
@@ -24,14 +25,14 @@ const Markers = ({ icon, cluster }: MarkersProps) => {
     // Methods.
     const getGoogleMapsMarkers = (locations: Location[]) => {
         return locations.map((location) => {
-            const marker = new google.maps.Marker({
+            const mapMarker = new google.maps.Marker({
                 position: location.position,
-                icon: icon
+                ...marker
             });
 
-            marker.addListener('click', () => onLocationClick(location.id));
+            mapMarker.addListener('click', () => onLocationClick(location.id));
 
-            return marker;
+            return mapMarker;
         });
     };
 
@@ -63,8 +64,8 @@ const Markers = ({ icon, cluster }: MarkersProps) => {
                             fillOpacity: 1,
                             strokeWeight: 0,
                             scale: 16,
-                            ...cluster.icon
-                        }
+                        },
+                        ...cluster.marker
                     });
                 }
             }
@@ -84,9 +85,10 @@ const Markers = ({ icon, cluster }: MarkersProps) => {
     return (
         <>
             {locations.map((location, index) => (
-                <Marker key={index} icon={icon} location={location} />
+                <Marker key={index} {...marker} location={location} />
             ))}
         </>
     );
 };
+
 export default Markers;

@@ -48,13 +48,13 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
         const newCenter = geometry.location;
 
-        setDefaultCenter(offsetCenter(map, newCenter));
+        // TODO variable
+        setDefaultCenter(offsetCenter(map, newCenter, 250, 0, newZoom));
         setDefaultZoom(newZoom);
 
-        if (geometry.viewport) {
-            // TODO offset bounds.
-            setDefaultBounds(geometry.viewport);
-        }
+        // if (geometry.viewport) {
+        //     setDefaultBounds(geometry.viewport);
+        // }
 
         handleOnButtonClick();
     };
@@ -70,8 +70,8 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
     const handleOnCurrentLocationClick = () => {
         const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
 
-        if (currentLocation) {
-            setDefaultCenter(currentLocation);
+        if (currentLocation && map) {
+            setDefaultCenter(offsetCenter(map, currentLocation, 250, 0, newZoom));
             setDefaultZoom(newZoom);
         }
     };

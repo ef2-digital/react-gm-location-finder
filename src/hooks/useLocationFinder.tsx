@@ -150,7 +150,7 @@ const useLocationFinder = <T extends Object>() => {
 
     useEffect(() => {
         if (map) {
-            map.fitBounds(defaultBounds);
+            map.fitBounds(defaultBounds, { bottom: 0, left: 0, right: 500, top: 0 });
             setPendingRefine(true);
         }
     }, [map, defaultBounds]);

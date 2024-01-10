@@ -36,9 +36,10 @@ export const offsetCenter = (
     map: google.maps.Map,
     center: google.maps.LatLng | google.maps.LatLngLiteral,
     offsetX?: number,
-    offsetY?: number
+    offsetY?: number,
+    newZoom?: number
 ): google.maps.LatLng | google.maps.LatLngLiteral => {
-    const zoom = map.getZoom();
+    const zoom = newZoom ?? map.getZoom();
     const projection = map.getProjection();
 
     if (!projection || !zoom) {

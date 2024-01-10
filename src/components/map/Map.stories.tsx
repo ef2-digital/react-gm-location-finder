@@ -58,8 +58,7 @@ export const Primary: Story = {
                     <Markers />
                 </Map>
                 <Map.Content classNameContainer="px-0 max-w-full md:container md:px-4">
-                    {/* Replace 500px with the disired height (100vh). */}
-                    <Card.Wrapper className="md:mt-8 md:mb-8 md:h-[calc(500px-4rem)]">
+                    <Card.Wrapper className="md:mt-8 md:mb-8 md:h-screen">
                         <Card>
                             {!selectedLocation ? (
                                 <>
