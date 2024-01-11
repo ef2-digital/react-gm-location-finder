@@ -1,7 +1,7 @@
 {
   "name": "@ef2/react-gm-location-finder",
   "private": false,
-  "version": "0.9.38",
+  "version": "0.9.39",
   "type": "module",
   "scripts": {
     "dev": "vite",
