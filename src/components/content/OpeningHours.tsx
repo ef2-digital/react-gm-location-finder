@@ -7,20 +7,20 @@ import {
     TableRow,
     getKeyValue,
     TableCell,
-    SlotsToClasses,
-    TableSlots
+    TableProps
 } from '@nextui-org/react';
 import { startOfWeek, addDays, format } from 'date-fns';
 import { useMemo } from 'react';
+import { isSlotOpen } from '.';
 
-export interface OpeningHoursProps {
+export interface OpeningHoursProps extends TableProps {
     location: Location<LocationOpeningHours>;
     locale?: string;
+    region?: string;
     labelClosed?: string;
     labelDay?: string;
     labelHour?: string;
     labelTime?: string;
-    classNamesTable?: SlotsToClasses<TableSlots>;
 }
 
 export const getFullDayName = (day: number, locale: string = 'nl', region = 'NL'): string => {
@@ -43,11 +43,13 @@ const getTime = (day: OpeningHoursDaysDay, labelClosed: string, labelHour: strin
 
 const OpeningHours = ({
     location,
+    locale,
+    region,
     labelClosed = 'Gesloten',
     labelDay = 'Openingstijden',
     labelHour = 'uur',
     labelTime = '',
-    classNamesTable
+    ...props
 }: OpeningHoursProps) => {
     if (!location.openingHours) {
         return null;
@@ -68,7 +70,8 @@ const OpeningHours = ({
             })
             .map(([key, day]) => {
                 return {
-                    day: getFullDayName(parseInt(key)),
+                    key: key,
+                    day: getFullDayName(parseInt(key), locale, region),
                     time: getTime(day, labelClosed, labelHour)
                 };
             });
@@ -87,11 +90,25 @@ const OpeningHours = ({
         ];
     }, [labelDay]);
 
+    const selectedKeys = useMemo(() => {
+        if (!location.openingHours) {
+            return [];
+        }
+
+        return Object.entries(location.openingHours.days).reduce<string[]>((a, [day, openingHours]) => {
+            if (openingHours.slots.some(openingHour => isSlotOpen(new Date(), day, openingHour))) {
+                return [...a, day];
+            }
+
+            return a;
+        }, [])
+    }, [location]);
+
     return (
-        <Table classNames={classNamesTable}>
+        <Table {...props} selectedKeys={selectedKeys} selectionMode='single' color='primary'>
             <TableHeader columns={columns}>{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}</TableHeader>
             <TableBody items={rows}>
-                {(item) => <TableRow key={item.day}>{(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}</TableRow>}
+                {(item) => <TableRow key={item.key}>{(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}</TableRow>}
             </TableBody>
         </Table>
     );

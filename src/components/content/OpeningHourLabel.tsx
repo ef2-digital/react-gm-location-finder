@@ -43,7 +43,7 @@ const OpeningHourLabel = ({
         () =>
             location.openingHours &&
             Object.entries(location.openingHours.days).reduce<OpeningHoursDaysDaySlot | undefined>((a, [day, openingHours]) => {
-                if (openingHours.closed) {
+                if (openingHours.closed || a) {
                     return a;
                 }
 
@@ -56,7 +56,7 @@ const OpeningHourLabel = ({
 
                 return slot;
             }, undefined),
-        []
+        [date, location.openingHours]
     );
 
     if (!open || !location.openingHours) {

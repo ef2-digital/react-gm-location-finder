@@ -43,6 +43,24 @@ const locations: Location<LocationOpeningHours>[] = [
                             to: setHours(new Date(), 17)
                         }
                     ]
+                },
+                3: {
+                    closed: false,
+                    slots: [
+                        {
+                            from: setHours(new Date(), 9),
+                            to: setHours(new Date(), 17)
+                        }
+                    ]
+                },
+                4: {
+                    closed: false,
+                    slots: [
+                        {
+                            from: setHours(new Date(), 9),
+                            to: setHours(new Date(), 17)
+                        }
+                    ]
                 }
             }
         }
