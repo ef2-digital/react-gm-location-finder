@@ -1,7 +1,7 @@
 {
   "name": "@ef2/react-gm-location-finder",
   "private": false,
-  "version": "0.9.94",
+  "version": "0.9.95",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "@react-google-maps/api": "^2.19.2",
     "@types/lodash-es": "^4.17.8",
     "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
     "framer-motion": "^10.16.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
