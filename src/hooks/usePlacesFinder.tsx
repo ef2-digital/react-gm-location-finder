@@ -41,14 +41,14 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         }
 
         if (event.key === 'Enter') {
-            handlePlace()
+            handlePlace();
         }
     };
 
     useEventListener('keypress', handleOnKeyPress);
 
     const handleOnPlaceChanged = () => {
-        handlePlace()
+        handlePlace();
     };
 
     const handleOnButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -115,13 +115,13 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         refine();
 
         return place;
-    }
+    };
 
     return {
         inputRef,
         onLoad: handleOnLoad,
         onPlaceChanged: handleOnPlaceChanged,
-        onButtonClick: handleOnButtonClick,
+        onButtonClick: handleOnButtonClick
     };
 };
 

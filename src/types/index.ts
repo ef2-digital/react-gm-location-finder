@@ -26,7 +26,8 @@ export type OpeningHoursDaysDaySlot = {
     to: Date;
 };
 
-export const DEFAULT_OFFSET_X = 250;
+// Using an offset will make the map center to be a bit to the right of the center but will impact all results.
+export const DEFAULT_OFFSET_X = 0;
 export const DEFAULT_ZOOM = 8;
 
 export const DEFAULT_CENTER: google.maps.LatLngLiteral = {
