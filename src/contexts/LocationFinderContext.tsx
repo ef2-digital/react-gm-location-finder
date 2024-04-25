@@ -1,4 +1,4 @@
-import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useState } from 'react';
+import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
 import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 
 // Context.
@@ -92,6 +92,13 @@ export const LocationFinderProvider = <T extends object = {}>({
 
     // - Load more functionality.
     const [page, setPage] = useState<number>(0);
+
+    // - Get user location on first load
+    useEffect(() => {
+        navigator.geolocation.getCurrentPosition((position) => {
+            setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        });
+    }, []);
 
     // Render.
     return (
