@@ -1,0 +1,22 @@
+{/* Center.mdx */}
+import { Meta, Source } from '@storybook/blocks';
+
+<Meta title="Map/Center" />
+
+## Center
+Change the center of the map based on locale.
+<Source code={`
+// 1. Create a locale center map object. Preferably, outside of the component.
+const localeCenterMap = new Map<string, Center>([
+    ['nl', { lat: 52.370216, lng: 4.895168 }],
+    ['nl-BE', { lat: 50.5010789, lng: 4.4764595 }],
+    ['fr', { lat: 50.5010789, lng: 4.4764595 }]
+]);
+
+// 2. Add locale and localeCenterMap to the LocationFinderProvider.
+<NextUIProvider>
+    <LocationFinderProvider locale={locale} localeCenterMap={localeCenterMap} loading={!isLoaded} locations={locations}>
+        {children}
+    </LocationFinderProvider>
+</NextUIProvider>
+`}/>

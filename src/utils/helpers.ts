@@ -1,4 +1,8 @@
+import { Locale } from 'date-fns';
+import { map } from 'lodash-es';
+import { Center, DEFAULT_OFFSET_X } from 'src/types';
 import { twMerge } from 'tailwind-merge';
+import { nl, fr, de } from 'date-fns/locale';
 
 export const classNamesTailwind = (...args: (string | { [key: string]: boolean } | undefined)[]): string => {
     return args.reduce<string>((a: string, c) => {
@@ -57,3 +61,13 @@ export const offsetCenter = (
     const worldCoordinateNewCenter = new google.maps.Point(worldCoordinateCenter.x - pixelOffset.x, worldCoordinateCenter.y);
     return projection.fromPointToLatLng(worldCoordinateNewCenter) ?? center;
 };
+
+export const defaultOffsetCenter = (map: google.maps.Map, center: Center, width: number, zoom?: number): Center => {
+    return offsetCenter(map, center, width > 768 ? DEFAULT_OFFSET_X : 0, 0, zoom);
+};
+
+export const localeMap = new Map<string, Locale>([
+    ['nl', nl],
+    ['fr', fr],
+    ['de', de]
+]);

@@ -9,9 +9,12 @@ import {
     TableCell,
     TableProps
 } from '@nextui-org/react';
-import { startOfWeek, addDays, format } from 'date-fns';
+import { startOfWeek, addDays } from 'date-fns';
 import { useMemo } from 'react';
 import { isSlotOpen } from '.';
+import { localeMap } from 'src/utils/helpers';
+import { zonedTimeToUtc, utcToZonedTime, format, formatInTimeZone } from "date-fns-tz";
+import nl from 'date-fns/locale/nl'
 
 export interface OpeningHoursProps extends TableProps {
     location: Location<LocationOpeningHours>;
@@ -23,22 +26,32 @@ export interface OpeningHoursProps extends TableProps {
     labelTime?: string;
 }
 
+const timezone = 'Europe/Amsterdam';
+
+const formatZonedTime = (date: Date, formatString: string) => {
+    return formatInTimeZone(date, timezone, formatString, { locale: nl })
+}
+
+const upperCaseFirstLetter = (string: string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 export const getFullDayName = (day: number, locale: string = 'nl', region = 'NL'): string => {
     const start = startOfWeek(new Date());
     const date = addDays(start, day);
-    return date.toLocaleString(`${locale}-${region}`, { weekday: 'long' });
+    return upperCaseFirstLetter(date.toLocaleString(`${locale}-${region}`, { weekday: 'long' }));
 };
 
-const getSlot = (slot: OpeningHoursDaysDaySlot) => {
-    return `${format(slot.from, 'HH:mm')} - ${format(slot.to, 'HH:mm')}`;
+const getSlot = (slot: OpeningHoursDaysDaySlot, locale: string) => {
+    return `${formatZonedTime(slot.from, 'HH:mm')} - ${formatZonedTime(slot.to, 'HH:mm')}`;
 };
 
-const getTime = (day: OpeningHoursDaysDay, labelClosed: string, labelHour: string): string => {
+const getTime = (day: OpeningHoursDaysDay, labelClosed: string, labelHour: string, locale: string = 'nl'): string => {
     if (day.closed || day.slots.length === 0) {
         return labelClosed;
     }
 
-    return `${day.slots.map(getSlot).join(', ')} ${labelHour}`;
+    return `${day.slots.map(slot => getSlot(slot, locale)).join(', ')} ${labelHour}`;
 };
 
 const OpeningHours = ({
@@ -58,10 +71,12 @@ const OpeningHours = ({
     const rows = useMemo(() => {
         return Object.entries(location.openingHours!.days)
             .sort((a, b) => {
+                // Sort Sunday to the end.
                 if (parseInt(b[0]) === 0) {
                     return -1;
                 }
-
+                
+                // Sort Sunday to the end.
                 if (parseInt(a[0]) === 0) {
                     return 1;
                 }
@@ -72,10 +87,10 @@ const OpeningHours = ({
                 return {
                     key: key,
                     day: getFullDayName(parseInt(key), locale, region),
-                    time: getTime(day, labelClosed, labelHour)
+                    time: getTime(day, labelClosed, labelHour, locale)
                 };
             });
-    }, [location.openingHours]);
+    }, [location.openingHours, locale]);
 
     const columns = useMemo(() => {
         return [
@@ -104,8 +119,12 @@ const OpeningHours = ({
         }, [])
     }, [location]);
 
+    if (rows.length === 0) {
+        return null;
+    }
+
     return (
-        <Table {...props} selectedKeys={selectedKeys} selectionMode='single' color='primary'>
+        <Table {...props} selectedKeys={selectedKeys} selectionMode='single' color='primary' aria-label={labelDay}>
             <TableHeader columns={columns}>{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}</TableHeader>
             <TableBody items={rows}>
                 {(item) => <TableRow key={item.key}>{(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}</TableRow>}

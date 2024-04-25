@@ -10,22 +10,23 @@ export type LocationOpeningHours = {
 
 export type OpeningHours = {
     days: OpeningHoursDays;
-}
+};
 
 export type OpeningHoursDays = {
     [key: number]: OpeningHoursDaysDay;
-}
+};
 
 export type OpeningHoursDaysDay = {
     closed?: boolean;
     slots: OpeningHoursDaysDaySlot[];
-}
+};
 
 export type OpeningHoursDaysDaySlot = {
     from: Date;
     to: Date;
-}
+};
 
+export const DEFAULT_OFFSET_X = 250;
 export const DEFAULT_ZOOM = 8;
 
 export const DEFAULT_CENTER: google.maps.LatLngLiteral = {

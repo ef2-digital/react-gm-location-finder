@@ -16,7 +16,7 @@ export interface MarkersProps {
 }
 
 const Markers = ({ marker, cluster }: MarkersProps) => {
-    const { locations, loading, map, onLocationClick } = useLocationFinder();
+    const { locations, loading, map, onLocationClick, setPendingRefine } = useLocationFinder();
 
     if (loading) {
         return null;
@@ -43,6 +43,15 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
 
         new MarkerClusterer({
             map,
+            // onClusterClick: (cluster) => {
+            //     const zoom = map.getZoom();
+
+            //     if (cluster.latLng && zoom) {
+            //         map.setCenter(cluster.latLng);
+            //         map.setZoom(zoom + 1);
+            //         setPendingRefine(true)
+            //     }
+            // },
             markers: getGoogleMapsMarkers(locations) ?? [],
             algorithm: new SuperClusterAlgorithm({
                 maxZoom: cluster.maxZoom,

@@ -1,4 +1,4 @@
-import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
+import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useState } from 'react';
 import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
 
 // Context.
@@ -8,11 +8,16 @@ export interface LocationFinderContextValue<T extends object = {}> {
     defaultCenter: Center;
     defaultBounds: Bounds;
     defaultSearch?: string;
-
+    pendingRefine: boolean;
+    setPendingRefine: (pendingRefine: boolean) => void;
     currentLocation?: Center;
+    // TODO refactor?
+    localeCenterMap?: Map<string, Center>;
+    locale?: string;
 
     loading: boolean;
     locations: Location<T>[];
+    selectedLocation?: Location<T>;
     listLocations: Location<T>[];
 
     setDefaultZoom: (zoom: number) => void;
@@ -20,6 +25,7 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setDefaultBounds: (bounds: Bounds) => void;
     setDefaultSearch: (search: string) => void;
     setListLocations: (locations: Location<T>[]) => void;
+    setSelectedLocation: (location: Location<T> | undefined) => void;
     setCurrentLocation: (center: Center) => void;
     setMap: (map: google.maps.Map) => void;
 
@@ -33,12 +39,15 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     defaultCenter: DEFAULT_CENTER,
     defaultBounds: DEFAULT_BOUNDS,
     defaultSearch: undefined,
+    pendingRefine: true,
+    setPendingRefine: () => {},
 
     currentLocation: undefined,
 
     loading: true,
     locations: [],
     listLocations: [],
+    selectedLocation: undefined,
 
     setDefaultZoom: () => {},
     setDefaultCenter: () => {},
@@ -46,14 +55,17 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setDefaultSearch: () => {},
     setListLocations: () => {},
     setCurrentLocation: () => {},
+    setSelectedLocation: () => {},
     setMap: () => {},
     // Load more functionality.
     page: 0,
-    setPage: () => {},
+    setPage: () => {}
 });
 
 export interface LocationFinderProps<T extends object = {}> {
     locations: Location<T>[];
+    locale?: string;
+    localeCenterMap?: Map<string, Center>;
     children?: ReactNode | ((value: LocationFinderContextValue<T>) => ReactNode);
     loading: boolean;
 }
@@ -61,33 +73,25 @@ export interface LocationFinderProps<T extends object = {}> {
 export const LocationFinderProvider = <T extends object = {}>({
     locations,
     loading,
-    children
+    children,
+    locale,
+    localeCenterMap
 }: PropsWithChildren<LocationFinderProps<T>>) => {
+    const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
+
     // Context.
     const [map, setMap] = useState<google.maps.Map>();
     const [defaultZoom, setDefaultZoom] = useState<number>(DEFAULT_ZOOM);
-    const [defaultCenter, setDefaultCenter] = useState<Center>(DEFAULT_CENTER);
+    const [defaultCenter, setDefaultCenter] = useState<Center>(center);
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
     const [currentLocation, setCurrentLocation] = useState<Center | undefined>(undefined);
+    const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
+    const [pendingRefine, setPendingRefine] = useState<boolean>(false);
 
     // - Load more functionality.
     const [page, setPage] = useState<number>(0);
-
-    // TODO make code optional with options.
-    useEffect(() => {
-        if (!navigator.geolocation) {
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
-            setCurrentLocation({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            });
-        });
-    }, [map, setCurrentLocation]);
 
     // Render.
     return (
@@ -109,9 +113,15 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setListLocations,
                 currentLocation,
                 setCurrentLocation,
+                selectedLocation,
+                setSelectedLocation,
+                pendingRefine,
+                setPendingRefine,
+                localeCenterMap,
+                locale,
                 // - Load more functionality.
                 page,
-                setPage,
+                setPage
             }}
         >
             {children}

@@ -10,7 +10,7 @@ import { Card } from '../card';
 import { CardBody, ListboxItem, Listbox, Input, ScrollShadow, Skeleton, Button, CardHeader, CardFooter } from '@nextui-org/react';
 
 // Google Maps.
-import { Autocomplete } from '@react-google-maps/api';
+import { StandaloneSearchBox } from '@react-google-maps/api';
 import { LocationOpeningHours } from 'src/types';
 import { OpeningHourLabel, OpeningHours } from '../content';
 import { useLoadMore, usePlacesFinder } from 'src/hooks';
@@ -32,9 +32,9 @@ const Search = () => {
     }
 
     return (
-        <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+        <StandaloneSearchBox onLoad={onLoad} onPlacesChanged={onPlaceChanged}>
             <Input ref={inputRef} classNames={{ inputWrapper: 'rounded-md' }} size="sm" defaultValue={defaultSearch} />
-        </Autocomplete>
+        </StandaloneSearchBox>
     );
 };
 

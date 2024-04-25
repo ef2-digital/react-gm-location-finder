@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
-import type { Bounds, Location } from 'src/types';
-import { calculateDistance, offsetCenter } from 'src/utils/helpers';
+import { type Bounds, type Center, type Location, DEFAULT_CENTER, DEFAULT_ZOOM } from 'src/types';
+import { calculateDistance, defaultOffsetCenter } from 'src/utils/helpers';
+import { useEventListener, useWindowSize } from 'usehooks-ts';
 
 const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
     if (bounds instanceof google.maps.LatLngBounds) {
@@ -11,7 +12,28 @@ const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
     return new google.maps.LatLngBounds(bounds);
 };
 
-const useLocationFinder = <T extends Object>() => {
+export const findLocationsInBounds = <T extends Object>(
+    locations: Location<T>[],
+    bounds: google.maps.LatLngBounds,
+    center?: Center,
+    zoom?: number
+): Location<T>[] => {
+    const listLocations = locations.filter((location) => bounds.contains(location.position));
+
+    if (center && zoom && zoom > 10) {
+        const sortedListLocations = listLocations
+            .map((location) => ({ ...location, distance: calculateDistance(center, location.position) }))
+            .sort((a, b) => a.distance - b.distance);
+
+        return sortedListLocations;
+    } else {
+        return listLocations;
+    }
+};
+
+export interface LocationFinderOptions<T extends object> {}
+
+const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
     // Hooks.
     const {
         defaultBounds,
@@ -26,67 +48,84 @@ const useLocationFinder = <T extends Object>() => {
         setListLocations,
         setCurrentLocation,
         locations,
+        selectedLocation,
+        setSelectedLocation,
         listLocations,
         loading,
         map,
         setMap,
         setPage,
+        setPendingRefine,
+        pendingRefine,
+        localeCenterMap,
+        locale
     } = useLocationFinderContext<T>();
 
-    // State.
+    const { width } = useWindowSize();
 
-    const [pendingRefine, setPendingRefine] = useState<boolean>(false);
-    const [previousZoom, setPreviousZoom] = useState<number>(defaultZoom);
-    const [selectedLocation, setSelectedLocation] = useState<Location<T> | undefined>(undefined);
+    // State.
 
     // Methods.
     const handleOnLoad = useCallback((map: google.maps.Map) => {
         setMap(map);
-        reset(map);
+        init(map);
     }, []);
 
     const handleOnChange = () => {
         setPendingRefine(true);
     };
 
-    const refine = () => {
+    const handleOnLocaleChange = (locale: string) => {
+        if (!map) {
+            return;
+        }
+
+        // TODO
+        // const center = options?.localeCenterMap?.get(locale) ?? DEFAULT_CENTER;
+        // map.setCenter(center);
+
+        // setDefaultCenter(center);
+    };
+
+    const handleOnKeyPress = (event: KeyboardEvent) => {
+        if (event.key === 'Backspace' && selectedLocation) {
+            handleOnBackClick();
+        }
+    };
+
+    useEventListener('keypress', handleOnKeyPress);
+
+    const refine = (defaultZoom?: number, defaultCenter?: Center) => {
         if (!map) {
             return;
         }
 
         const bounds = map.getBounds();
-        const center = map.getCenter();
-        const zoom = map.getZoom();
+        const center = defaultCenter ?? map.getCenter();
+        const zoom = defaultZoom ?? map.getZoom();
 
         if (bounds) {
-            const listLocations = locations.filter((location) => bounds.contains(location.position));
-
-            if (center && zoom && zoom > 10) {
-                const sortedListLocations = listLocations
-                    .map((location) => ({ ...location, distance: calculateDistance(center, location.position) }))
-                    .sort((a, b) => a.distance - b.distance);
-
-                setListLocations(sortedListLocations);
-            } else {
-                setListLocations(listLocations);
-            }
-        }
-
-        if (center) {
-            setDefaultCenter(center);
-        }
-
-        if (zoom) {
-            setDefaultZoom(zoom);
+            const listLocations = findLocationsInBounds(locations, bounds, center, zoom);
+            setListLocations(listLocations);
         }
     };
 
-    const reset = (map: google.maps.Map) => {
+    const init = (map: google.maps.Map) => {
+        map.setZoom(defaultZoom);
+        map.setCenter(defaultCenter);
+        refine(defaultZoom, defaultCenter);
+    };
+
+    const reset = useCallback(() => {
+        if (!map) {
+            return;
+        }
+
         map.setZoom(defaultZoom);
         map.setCenter(defaultCenter);
 
-        refine();
-    };
+        setPendingRefine(true);
+    }, [map]);
 
     const handleOnIdle = () => {
         if (pendingRefine) {
@@ -107,31 +146,50 @@ const useLocationFinder = <T extends Object>() => {
                 return;
             }
 
-            const previousZoom = map.getZoom();
+            const zoom = map.getZoom();
+            const newZoom = zoom ? Math.max(12, zoom + 3) : 12;
 
-            if (previousZoom) {
-                setPreviousZoom(previousZoom);
+            map.setZoom(newZoom);
+            map.panTo(defaultOffsetCenter(map, location.position, width, newZoom));
+
+            setSelectedLocation(location);
+            setPendingRefine(true);
+        },
+        [map, width]
+    );
+
+    const handleOnCurrentLocationClick = useCallback(
+        (lat: number, lng: number) => {
+            if (!map) {
+                return;
             }
 
-            map.setZoom(12);
-            map.setCenter(offsetCenter(map, location.position));
+            const newZoom = 12;
 
+            map.setZoom(newZoom);
+            map.panTo(defaultOffsetCenter(map, { lat, lng }, width, newZoom));
+
+            setSelectedLocation(undefined);
             setPendingRefine(true);
-            setSelectedLocation(location);
         },
-        [map]
+        [map, width]
     );
 
     const handleOnBackClick = useCallback(() => {
-        if (!map || !previousZoom) {
+        if (!map) {
             return;
         }
 
-        map.setZoom(previousZoom);
+        const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
 
+        map.setZoom(DEFAULT_ZOOM);
+        map.panTo(center);
+
+        setDefaultZoom(DEFAULT_ZOOM);
+        setDefaultCenter(center);
         setSelectedLocation(undefined);
         setPendingRefine(true);
-    }, [map, previousZoom, setSelectedLocation, setPendingRefine]);
+    }, [map]);
 
     // Life cycle.
     useEffect(() => {
@@ -143,17 +201,10 @@ const useLocationFinder = <T extends Object>() => {
 
     useEffect(() => {
         if (map) {
-            map.setCenter(defaultCenter);
+            map.panTo(defaultCenter);
             setPendingRefine(true);
         }
     }, [map, defaultCenter]);
-
-    useEffect(() => {
-        if (map) {
-            map.fitBounds(defaultBounds, { bottom: 0, left: 0, right: 500, top: 0 });
-            setPendingRefine(true);
-        }
-    }, [map, defaultBounds]);
 
     return {
         map,
@@ -176,13 +227,18 @@ const useLocationFinder = <T extends Object>() => {
         setCurrentLocation,
 
         refine,
+        reset,
         onIdle: handleOnIdle,
         onLoad: handleOnLoad,
         onChange: handleOnChange,
         onLocationClick: handleOnLocationClick,
+        onCurrentLocationClick: handleOnCurrentLocationClick,
         onBackClick: handleOnBackClick,
+        onLocaleChange: handleOnLocaleChange,
 
-        setPage
+        setPage,
+        pendingRefine,
+        setPendingRefine
     };
 };
 
