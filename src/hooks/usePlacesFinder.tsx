@@ -86,7 +86,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
 
         // Select location after place changed when option is enabled.
         if (geometry.viewport && options?.selectLocationAfterPlaceChanged) {
-            const listLocations = findLocationsInBounds(locations, geometry.viewport, geometry.location, newZoom);
+            const listLocations = findLocationsInBounds(map, width, locations, geometry.viewport, geometry.location, newZoom);
 
             if (Boolean(listLocations.length)) {
                 const firstLocation = listLocations[0];
