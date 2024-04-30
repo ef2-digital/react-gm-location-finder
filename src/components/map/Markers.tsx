@@ -1,12 +1,12 @@
 import Marker from './Marker';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MarkerClusterer, SuperClusterAlgorithm } from '@googlemaps/markerclusterer';
 import { Location } from 'src/types';
 import { useLocationFinder } from 'src/hooks';
 import { MarkerProps } from '@react-google-maps/api';
 
 export interface MarkersProps {
-    marker?: Omit<MarkerProps, 'position'>;
+    marker?: Omit<MarkerProps, 'position'> | ((selected: boolean) => Omit<MarkerProps, 'position'>);
     cluster?: {
         enabled: boolean;
         marker?: Omit<MarkerProps, 'position'>;
@@ -16,7 +16,8 @@ export interface MarkersProps {
 }
 
 const Markers = ({ marker, cluster }: MarkersProps) => {
-    const { locations, loading, map, onLocationClick, setPendingRefine } = useLocationFinder();
+    const { locations, selectedLocation, loading, map, onLocationClick, setPendingRefine } = useLocationFinder();
+    const [clusterer, setClusterer] = useState<MarkerClusterer | undefined>(undefined);
 
     if (loading) {
         return null;
@@ -27,21 +28,23 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
         return locations.map((location) => {
             const mapMarker = new google.maps.Marker({
                 position: location.position,
-                ...marker
+                ...(typeof marker === 'function' ? marker(location.id === selectedLocation?.id) : marker)
             });
 
+            mapMarker.set('id', location.id);
             mapMarker.addListener('click', () => onLocationClick(location.id));
 
             return mapMarker;
         });
     };
 
+    const markers = getGoogleMapsMarkers(locations) ?? [];
     const handleOnLoad = (map: google.maps.Map) => {
         if (!cluster?.enabled) {
             return;
         }
 
-        new MarkerClusterer({
+        const clusterer = new MarkerClusterer({
             map,
             // onClusterClick: (cluster) => {
             //     const zoom = map.getZoom();
@@ -52,7 +55,7 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
             //         setPendingRefine(true)
             //     }
             // },
-            markers: getGoogleMapsMarkers(locations) ?? [],
+            markers,
             algorithm: new SuperClusterAlgorithm({
                 maxZoom: cluster.maxZoom,
                 minZoom: cluster.minZoom,
@@ -72,13 +75,15 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
                             fillColor: '#FFC107',
                             fillOpacity: 1,
                             strokeWeight: 0,
-                            scale: 16,
+                            scale: 16
                         },
                         ...cluster.marker
                     });
                 }
             }
         });
+
+        setClusterer(clusterer);
     };
 
     useEffect(() => {
@@ -86,6 +91,23 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
             handleOnLoad(map);
         }
     }, [map]);
+
+    useEffect(() => {
+        // @ts-ignore, markers is a private property, find a better way to do this.
+        const location = (clusterer?.markers as google.maps.Marker[])?.find((marker) => marker.get('id') === selectedLocation?.id);
+
+        if (location && clusterer) {
+            clusterer.removeMarker(location);
+
+            const newMarker = new google.maps.Marker({
+                ...location,
+                ...(typeof marker === 'function' ? marker(location.get('id') === selectedLocation?.id) : marker)
+            });
+
+            newMarker.addListener('click', () => onLocationClick(location.get('id')));
+            clusterer.addMarker(newMarker);
+        }
+    }, [selectedLocation, clusterer]);
 
     if (cluster?.enabled) {
         return null;
