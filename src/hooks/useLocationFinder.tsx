@@ -113,6 +113,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
     const init = (map: google.maps.Map) => {
         map.setZoom(defaultZoom);
         map.setCenter(defaultCenter);
+
         refine(defaultZoom, defaultCenter);
     };
 
@@ -122,7 +123,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         }
 
         map.setZoom(defaultZoom);
-        map.setCenter(defaultCenter);
+        map.setCenter(currentLocation ?? defaultCenter);
 
         setPendingRefine(true);
     }, [map]);
@@ -205,6 +206,17 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             setPendingRefine(true);
         }
     }, [map, defaultCenter]);
+
+    useEffect(() => {
+        if (map && currentLocation) {
+            const newZoom = 12;
+
+            map.setZoom(newZoom);
+            map.panTo(defaultOffsetCenter(map, currentLocation, width, newZoom));
+
+            setPendingRefine(true);
+        }
+    }, [currentLocation, map]);
 
     return {
         map,
