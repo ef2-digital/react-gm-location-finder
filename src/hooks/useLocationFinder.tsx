@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
-import { type Bounds, type Center, type Location, DEFAULT_CENTER, DEFAULT_ZOOM } from 'src/types';
+import { type Bounds, type Center, type Location, DEFAULT_CENTER, DEFAULT_ZOOM, DEFAULT_OFFSET_X } from 'src/types';
 import { calculateDistance, defaultOffsetCenter, offsetCenter } from 'src/utils/helpers';
 import { useEventListener, useWindowSize } from 'usehooks-ts';
 
@@ -14,6 +14,7 @@ const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
 
 export const findLocationsInBounds = <T extends Object>(
     map: google.maps.Map,
+    width: number,
     locations: Location<T>[],
     bounds: google.maps.LatLngBounds,
     center?: Center,
@@ -21,9 +22,12 @@ export const findLocationsInBounds = <T extends Object>(
 ): Location<T>[] => {
     const listLocations = locations.filter((location) => bounds.contains(location.position));
 
-    if (center && zoom && zoom > 10) {
+    if (center && map && zoom && zoom > 10) {
         const sortedListLocations = listLocations
-            .map((location) => ({ ...location, distance: calculateDistance(offsetCenter(map, center), location.position) }))
+            .map((location) => ({
+                ...location,
+                distance: calculateDistance(center, defaultOffsetCenter(map, location.position, width, zoom))
+            }))
             .sort((a, b) => a.distance - b.distance);
 
         return sortedListLocations;
@@ -106,7 +110,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         const zoom = defaultZoom ?? map.getZoom();
 
         if (bounds) {
-            const listLocations = findLocationsInBounds(map, locations, bounds, center, zoom);
+            const listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
             setListLocations(listLocations);
         }
     };
