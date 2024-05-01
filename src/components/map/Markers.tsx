@@ -109,6 +109,13 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
         }
     }, [selectedLocation, clusterer]);
 
+    useEffect(() => {
+        if (clusterer) {
+            clusterer.clearMarkers();
+            clusterer.addMarkers(getGoogleMapsMarkers(locations));
+        }
+    }, [locations])
+
     if (cluster?.enabled) {
         return null;
     }

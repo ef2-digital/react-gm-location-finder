@@ -14,7 +14,7 @@ import { LocationFinderProvider } from '@ef2/react-gm-location-finder';
 const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: 'YOUR_API_KEY',
-    libraries: ['places'],
+    libraries: ['places', 'geometry'],
     language: 'nl',
     region: 'nl'
 });
