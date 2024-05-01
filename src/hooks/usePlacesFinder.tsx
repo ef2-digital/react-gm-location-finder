@@ -51,7 +51,7 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         handlePlace()
     };
 
-    const handleOnButtonClick = (e: MouseEvent<HTMLButtonElement>) => {
+    const handleOnButtonClick = (e?: MouseEvent<HTMLButtonElement>) => {
         if (!map || !inputRef.current) {
             return;
         }
@@ -61,8 +61,8 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
 
         handlePlace();
 
-        e.stopPropagation();
-        e.preventDefault();
+        e?.stopPropagation();
+        e?.preventDefault();
     };
 
     const handlePlace = () => {
