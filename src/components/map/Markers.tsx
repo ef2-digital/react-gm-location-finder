@@ -114,7 +114,7 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
             clusterer.clearMarkers();
             clusterer.addMarkers(getGoogleMapsMarkers(locations));
         }
-    }, [locations])
+    }, [locations]);
 
     if (cluster?.enabled) {
         return null;
