@@ -68,6 +68,7 @@ export interface LocationFinderProps<T extends object = {}> {
     localeCenterMap?: Map<string, Center>;
     children?: ReactNode | ((value: LocationFinderContextValue<T>) => ReactNode);
     loading: boolean;
+    initalCurrentLocation?: Center | undefined;
 }
 
 export const LocationFinderProvider = <T extends object = {}>({
@@ -75,7 +76,8 @@ export const LocationFinderProvider = <T extends object = {}>({
     loading,
     children,
     locale,
-    localeCenterMap
+    localeCenterMap,
+    initalCurrentLocation
 }: PropsWithChildren<LocationFinderProps<T>>) => {
     const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
 
@@ -86,7 +88,7 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
-    const [currentLocation, setCurrentLocation] = useState<Center | undefined>(undefined);
+    const [currentLocation, setCurrentLocation] = useState<Center | undefined>(initalCurrentLocation);
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
 
@@ -95,9 +97,11 @@ export const LocationFinderProvider = <T extends object = {}>({
 
     // - Get user location on first load
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition((position) => {
-            setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-        });
+        if (!currentLocation && navigator) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+            });
+        }
     }, []);
 
     // Render.
