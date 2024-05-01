@@ -113,6 +113,7 @@ const Markers = ({ marker, cluster }: MarkersProps) => {
         if (clusterer) {
             clusterer.clearMarkers();
             clusterer.addMarkers(getGoogleMapsMarkers(locations));
+            clusterer.render();
         }
     }, [locations]);
 
