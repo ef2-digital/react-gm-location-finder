@@ -4,7 +4,6 @@ import { Map, type MapProps, Markers, type MarkersProps } from './components/map
 import { OpeningHours, OpeningHourLabel, isSlotOpen } from './components/content';
 import { Card } from './components/card';
 import type { Location, LocationOpeningHours, OpeningHoursDays,  OpeningHoursDaysDay, Center, OpeningHoursDaysDaySlot } from './types';
-import type { PlacesFinderOptions } from './hooks/usePlacesFinder';
 
 export {
     useLocationFinder,
@@ -23,7 +22,6 @@ export {
 export type {
     MapProps,
     Location,
-    PlacesFinderOptions,
     MarkersProps,
     LocationOpeningHours,
     OpeningHoursDays,

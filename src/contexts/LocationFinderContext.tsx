@@ -10,7 +10,9 @@ export interface LocationFinderContextValue<T extends object = {}> {
     defaultSearch?: string;
     pendingRefine: boolean;
     setPendingRefine: (pendingRefine: boolean) => void;
-    currentLocation?: Center;
+    currentPosition?: Center;
+    toBeRefinedCenter?: Center;
+    toBeRefinedBounds?: google.maps.LatLngBounds;
     // TODO refactor?
     localeCenterMap?: Map<string, Center>;
     locale?: string;
@@ -26,7 +28,9 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setDefaultSearch: (search: string) => void;
     setListLocations: (locations: Location<T>[]) => void;
     setSelectedLocation: (location: Location<T> | undefined) => void;
-    setCurrentLocation: (center: Center) => void;
+    setCurrentPosition: (center: Center) => void;
+    setToBeRefinedCenter: (center: Center) => void;
+    setToBeRefinedBounds: (bounds: google.maps.LatLngBounds) => void;
     setMap: (map: google.maps.Map) => void;
 
     // Load more functionality.
@@ -42,7 +46,7 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     pendingRefine: true,
     setPendingRefine: () => {},
 
-    currentLocation: undefined,
+    currentPosition: undefined,
 
     loading: true,
     locations: [],
@@ -54,8 +58,10 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setDefaultBounds: () => {},
     setDefaultSearch: () => {},
     setListLocations: () => {},
-    setCurrentLocation: () => {},
+    setCurrentPosition: () => {},
     setSelectedLocation: () => {},
+    setToBeRefinedCenter: () => {},
+    setToBeRefinedBounds: () => {},
     setMap: () => {},
     // Load more functionality.
     page: 0,
@@ -91,8 +97,13 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
     const [currentLocation, setCurrentLocation] = useState<Center | undefined>(initialCurrentLocation);
+    const [currentPosition, setCurrentPosition] = useState<Center | undefined>(undefined);
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
+
+    // - Location to refine when the map is loaded.
+    const [toBeRefinedCenter, setToBeRefinedCenter] = useState<Center | undefined>(undefined);
+    const [toBeRefinedBounds, setToBeRefinedBounds] = useState<google.maps.LatLngBounds | undefined>(undefined);
 
     // - Load more functionality.
     const [page, setPage] = useState<number>(0);
@@ -100,8 +111,13 @@ export const LocationFinderProvider = <T extends object = {}>({
     useEffect(() => {
         if (useCurrentLocation && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
-                setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+                setCurrentPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
             });
+
+if (!toBeRefinedCenter) {
+                setToBeRefinedCenter(center);
+            }
+
         }
     }, []);
 
@@ -113,18 +129,22 @@ export const LocationFinderProvider = <T extends object = {}>({
                 defaultCenter,
                 defaultZoom,
                 defaultSearch,
+                toBeRefinedCenter,
+                toBeRefinedBounds,
                 setDefaultZoom,
                 setDefaultBounds,
                 setDefaultCenter,
                 setDefaultSearch,
+                setToBeRefinedCenter,
+                setToBeRefinedBounds,
                 setMap,
                 map,
                 loading,
                 locations,
                 listLocations,
                 setListLocations,
-                currentLocation,
-                setCurrentLocation,
+                currentPosition,
+                setCurrentPosition,
                 selectedLocation,
                 setSelectedLocation,
                 pendingRefine,

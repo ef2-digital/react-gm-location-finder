@@ -36,7 +36,12 @@ export const findLocationsInBounds = <T extends Object>(
     }
 };
 
-export interface LocationFinderOptions<T extends object> {}
+export interface LocationFinderOptions<T extends object> {
+    selectLocationAfterPlaceOrPositionChanged?: boolean;
+    zoomAfterPlaceOrPostionChanged?: number;
+}
+
+const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED = 12;
 
 const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
     // Hooks.
@@ -45,13 +50,13 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         defaultZoom,
         defaultCenter,
         defaultSearch,
-        currentLocation,
+        currentPosition,
         setDefaultBounds,
         setDefaultCenter,
         setDefaultSearch,
         setDefaultZoom,
         setListLocations,
-        setCurrentLocation,
+        setCurrentPosition,
         locations,
         selectedLocation,
         setSelectedLocation,
@@ -63,6 +68,8 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setPendingRefine,
         pendingRefine,
         localeCenterMap,
+        toBeRefinedBounds,
+        toBeRefinedCenter,
         locale
     } = useLocationFinderContext<T>();
 
@@ -128,10 +135,55 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         }
 
         map.setZoom(defaultZoom);
-        map.setCenter(currentLocation ?? defaultCenter);
+        map.setCenter(defaultCenter);
 
         setPendingRefine(true);
     }, [map]);
+
+    const updateMapAfterPlaceChanged = (map: google.maps.Map) => {
+        if (!toBeRefinedCenter) {
+            return;
+        }
+
+        const newZoom = options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED;
+
+        // Select location after place or position changed when option is enabled.
+        if (toBeRefinedBounds && options?.selectLocationAfterPlaceOrPositionChanged) {
+            const listLocations = findLocationsInBounds(map, width, locations, toBeRefinedBounds, toBeRefinedCenter, newZoom);
+
+            if (Boolean(listLocations.length)) {
+                const firstLocation = listLocations[0];
+                const newCenter = firstLocation.position;
+                const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
+
+                map.setCenter(newCenterOffset);
+                map.setZoom(newZoom);
+
+                setDefaultCenter(newCenterOffset);
+                setSelectedLocation(firstLocation);
+                setDefaultZoom(newZoom);
+
+                return;
+            }
+        }
+
+        const newCenter = toBeRefinedCenter;
+        const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
+
+        map.setCenter(newCenterOffset);
+        map.setZoom(newZoom);
+
+        setDefaultCenter(newCenterOffset);
+        setDefaultZoom(newZoom);
+        refine();
+    };
+
+    useEffect(() => {
+        if (map && toBeRefinedCenter) {
+            // Rename.
+            updateMapAfterPlaceChanged(map);
+        }
+    }, [toBeRefinedBounds, toBeRefinedCenter, map]);
 
     const handleOnIdle = () => {
         if (pendingRefine) {
@@ -212,17 +264,6 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         }
     }, [map, defaultCenter]);
 
-    useEffect(() => {
-        if (map && currentLocation) {
-            const newZoom = 12;
-
-            map.setZoom(newZoom);
-            map.panTo(defaultOffsetCenter(map, currentLocation, width, newZoom));
-
-            setPendingRefine(true);
-        }
-    }, [currentLocation, map]);
-
     return {
         map,
         loading,
@@ -230,7 +271,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         listLocations,
         selectedLocation,
         setSelectedLocation,
-        currentLocation,
+        currentPosition,
 
         defaultBounds,
         defaultCenter,
@@ -241,7 +282,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setDefaultCenter,
         setDefaultSearch,
         setDefaultZoom,
-        setCurrentLocation,
+        setCurrentPosition,
 
         refine,
         reset,

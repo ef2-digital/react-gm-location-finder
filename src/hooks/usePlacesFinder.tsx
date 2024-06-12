@@ -1,8 +1,8 @@
 import { MouseEvent, useCallback, useRef, useState } from 'react';
 import { Bounds, Center } from 'src/types';
-import { defaultOffsetCenter } from 'src/utils/helpers';
-import { useEventListener, useWindowSize } from 'usehooks-ts';
-import useLocationFinder, { findLocationsInBounds } from './useLocationFinder';
+import { useEventListener } from 'usehooks-ts';
+import useLocationFinder from './useLocationFinder';
+import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 
 export interface PlacesFinderProps {
     setDefaultZoom: (zoom: number) => void;
@@ -11,17 +11,10 @@ export interface PlacesFinderProps {
     setDefaultSearch?: (search: string) => void;
 }
 
-export interface PlacesFinderOptions {
-    zoomAfterPlaceChanged?: number;
-    selectLocationAfterPlaceChanged?: boolean;
-}
-
-const DEFAULT_ZOOM_AFTER_PLACE_CHANGED = 12;
-
-const usePlacesFinder = (options?: PlacesFinderOptions) => {
+const usePlacesFinder = () => {
     // Hooks.
-    const { map, locations, setSelectedLocation, setDefaultCenter, setDefaultZoom, refine } = useLocationFinder();
-    const { width } = useWindowSize();
+    const { map } = useLocationFinder();
+    const { setToBeRefinedBounds, setToBeRefinedCenter } = useLocationFinderContext();
 
     // State.
     const [autocomplete, setAutocomplete] = useState<google.maps.places.SearchBox | undefined>(undefined);
@@ -41,14 +34,14 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         }
 
         if (event.key === 'Enter') {
-            handlePlace()
+            setPlaceToBeRefined();
         }
     };
 
     useEventListener('keypress', handleOnKeyPress);
 
     const handleOnPlaceChanged = () => {
-        handlePlace()
+        setPlaceToBeRefined();
     };
 
     const handleOnButtonClick = (e?: MouseEvent<HTMLButtonElement>) => {
@@ -59,14 +52,14 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
         google.maps.event.trigger(inputRef.current, 'focus', {});
         google.maps.event.trigger(inputRef.current, 'keydown', { keyCode: 13 });
 
-        handlePlace();
+        setPlaceToBeRefined();
 
         e?.stopPropagation();
         e?.preventDefault();
     };
 
-    const handlePlace = () => {
-        if (!autocomplete || !map) {
+    const setPlaceToBeRefined = () => {
+        if (!autocomplete) {
             return;
         }
 
@@ -82,46 +75,20 @@ const usePlacesFinder = (options?: PlacesFinderOptions) => {
             return;
         }
 
-        const newZoom = options?.zoomAfterPlaceChanged ?? DEFAULT_ZOOM_AFTER_PLACE_CHANGED;
+        const newCenter = geometry.location;
 
-        // Select location after place changed when option is enabled.
-        if (geometry.viewport && options?.selectLocationAfterPlaceChanged) {
-            const listLocations = findLocationsInBounds(map, width, locations, geometry.viewport, geometry.location, newZoom);
-
-            if (Boolean(listLocations.length)) {
-                const firstLocation = listLocations[0];
-                const newCenter = firstLocation.position;
-                const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
-
-                map.setCenter(newCenterOffset);
-                map.setZoom(newZoom);
-
-                setDefaultCenter(newCenterOffset);
-                setSelectedLocation(firstLocation);
-                setDefaultZoom(newZoom);
-
-                return place;
-            }
+        if (geometry.viewport) {
+            setToBeRefinedBounds(geometry.viewport);
         }
 
-        const newCenter = geometry.location;
-        const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
-
-        map.setCenter(newCenterOffset);
-        map.setZoom(newZoom);
-
-        setDefaultCenter(newCenterOffset);
-        setDefaultZoom(newZoom);
-        refine();
-
-        return place;
-    }
+        setToBeRefinedCenter(newCenter);
+    };
 
     return {
         inputRef,
         onLoad: handleOnLoad,
         onPlaceChanged: handleOnPlaceChanged,
-        onButtonClick: handleOnButtonClick,
+        onButtonClick: handleOnButtonClick
     };
 };
 
