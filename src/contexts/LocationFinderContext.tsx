@@ -85,6 +85,7 @@ export const LocationFinderProvider = <T extends object = {}>({
     locale,
     localeCenterMap,
     initialCurrentLocation,
+    // TODO move to options!!
     useCurrentLocation
 }: PropsWithChildren<LocationFinderProps<T>>) => {
     const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
@@ -96,8 +97,7 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
     const [listLocations, setListLocations] = useState<Location[]>(locations);
-    const [currentLocation, setCurrentLocation] = useState<Center | undefined>(initialCurrentLocation);
-    const [currentPosition, setCurrentPosition] = useState<Center | undefined>(undefined);
+    const [currentPosition, setCurrentPosition] = useState<Center | undefined>(initialCurrentLocation);
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
 
@@ -107,6 +107,7 @@ export const LocationFinderProvider = <T extends object = {}>({
 
     // - Load more functionality.
     const [page, setPage] = useState<number>(0);
+
     // - Get user location on first load
     useEffect(() => {
         if (useCurrentLocation && navigator.geolocation) {
@@ -114,10 +115,9 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setCurrentPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
             });
 
-if (!toBeRefinedCenter) {
+            if (!toBeRefinedCenter) {
                 setToBeRefinedCenter(center);
             }
-
         }
     }, []);
 
