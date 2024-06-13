@@ -57,6 +57,8 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setDefaultZoom,
         setListLocations,
         setCurrentPosition,
+        setToBeRefinedBounds,
+        setToBeRefinedCenter,
         locations,
         selectedLocation,
         setSelectedLocation,
@@ -162,6 +164,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
                 setDefaultCenter(newCenterOffset);
                 setSelectedLocation(firstLocation);
                 setDefaultZoom(newZoom);
+                setToBeRefinedCenter(undefined);
 
                 return;
             }
@@ -175,6 +178,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
         setDefaultCenter(newCenterOffset);
         setDefaultZoom(newZoom);
+        setToBeRefinedCenter(undefined);
         refine();
     };
 
@@ -219,6 +223,10 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
     const handleOnCurrentLocationClick = useCallback(
         (lat: number, lng: number) => {
             if (!map) {
+                if (!toBeRefinedCenter) {
+                    setToBeRefinedCenter({ lat, lng });
+                }
+
                 return;
             }
 
@@ -230,7 +238,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             setSelectedLocation(undefined);
             setPendingRefine(true);
         },
-        [map, width]
+        [map, width, toBeRefinedCenter]
     );
 
     const handleOnBackClick = useCallback(() => {

@@ -29,7 +29,7 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setListLocations: (locations: Location<T>[]) => void;
     setSelectedLocation: (location: Location<T> | undefined) => void;
     setCurrentPosition: (center: Center) => void;
-    setToBeRefinedCenter: (center: Center) => void;
+    setToBeRefinedCenter: (center: Center | undefined) => void;
     setToBeRefinedBounds: (bounds: google.maps.LatLngBounds) => void;
     setMap: (map: google.maps.Map) => void;
 
