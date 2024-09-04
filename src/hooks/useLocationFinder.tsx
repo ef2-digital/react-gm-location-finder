@@ -39,9 +39,11 @@ export const findLocationsInBounds = <T extends Object>(
 export interface LocationFinderOptions<T extends object> {
     selectLocationAfterPlaceOrPositionChanged?: boolean;
     zoomAfterPlaceOrPostionChanged?: number;
+    zoomAfterPlaceOrPostionChangedMobile?: number;
 }
 
 const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED = 12;
+const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE = 10;
 
 const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
     // Hooks.
@@ -147,7 +149,10 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             return;
         }
 
-        const newZoom = options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED;
+        const newZoom =
+            width > 768
+                ? options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED
+                : options?.zoomAfterPlaceOrPostionChangedMobile ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE;
 
         // Select location after place or position changed when option is enabled.
         if (toBeRefinedBounds && options?.selectLocationAfterPlaceOrPositionChanged) {
@@ -203,13 +208,15 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             }
 
             const location = locations.find((location) => location.id === id);
+            const desktop = width > 768;
 
             if (!location) {
                 return;
             }
 
             const zoom = map.getZoom();
-            const newZoom = zoom ? Math.max(12, zoom + 3) : 12;
+            const baseZoom = desktop ? 12 : 10;
+            const newZoom = zoom ? Math.max(baseZoom, zoom + 3) : baseZoom;
 
             map.setZoom(newZoom);
             map.panTo(defaultOffsetCenter(map, location.position, width, newZoom));
@@ -230,7 +237,8 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
                 return;
             }
 
-            const newZoom = 12;
+            const desktop = width > 768;
+            const newZoom = desktop ? 12 : 10;
 
             map.setZoom(newZoom);
             map.panTo(defaultOffsetCenter(map, { lat, lng }, width, newZoom));
