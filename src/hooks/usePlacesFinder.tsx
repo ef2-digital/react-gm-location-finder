@@ -1,7 +1,6 @@
 import { MouseEvent, useCallback, useRef, useState } from 'react';
 import { Bounds, Center } from 'src/types';
 import { useEventListener } from 'usehooks-ts';
-import useLocationFinder from './useLocationFinder';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 
 export interface PlacesFinderProps {
@@ -13,7 +12,6 @@ export interface PlacesFinderProps {
 
 const usePlacesFinder = () => {
     // Hooks.
-    const { map } = useLocationFinder();
     const { setToBeRefinedBounds, setToBeRefinedCenter } = useLocationFinderContext();
 
     // State.
@@ -45,7 +43,7 @@ const usePlacesFinder = () => {
     };
 
     const handleOnButtonClick = (e?: MouseEvent<HTMLButtonElement>) => {
-        if (!map || !inputRef.current) {
+        if (!inputRef.current) {
             return;
         }
 
