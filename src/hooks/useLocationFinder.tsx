@@ -3,6 +3,7 @@ import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import { type Bounds, type Center, type Location, DEFAULT_CENTER, DEFAULT_ZOOM, DEFAULT_OFFSET_X } from 'src/types';
 import { calculateDistance, defaultOffsetCenter, offsetCenter } from 'src/utils/helpers';
 import { useEventListener, useWindowSize } from 'usehooks-ts';
+import { PAGE_SIZE } from './useLoadMore';
 
 const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
     if (bounds instanceof google.maps.LatLngBounds) {
@@ -22,7 +23,7 @@ export const findLocationsInBounds = <T extends Object>(
 ): Location<T>[] => {
     const listLocations = locations.filter((location) => bounds.contains(location.position));
 
-    if (center && map && zoom && zoom > 10) {
+    if (center && map && zoom && zoom > 9) {
         const sortedListLocations = listLocations
             .map((location) => ({
                 ...location,
@@ -48,6 +49,8 @@ const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE = 10;
 const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
     // Hooks.
     const {
+        frozenCenter,
+        setFrozenCenter,
         defaultBounds,
         defaultZoom,
         defaultCenter,
@@ -74,7 +77,8 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         localeCenterMap,
         toBeRefinedBounds,
         toBeRefinedCenter,
-        locale
+        locale,
+        setNoResultsBounds
     } = useLocationFinderContext<T>();
 
     const { width } = useWindowSize();
@@ -117,13 +121,59 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         }
 
         const bounds = map.getBounds();
-        const center = defaultCenter ?? map.getCenter();
+        const center = frozenCenter ?? defaultCenter ?? map.getCenter();
         const zoom = defaultZoom ?? map.getZoom();
 
         if (bounds) {
+            // Find locations inside the bounds
             const listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
-            setListLocations(listLocations);
+
+            if (listLocations.length > 0) {
+                setNoResultsBounds(false);
+
+                // Add nearest locations if list is smaller than PAGE_SIZE
+                if (listLocations.length < PAGE_SIZE) {
+                    const remainingSlots = PAGE_SIZE - listLocations.length;
+                    const nearestLocations = findNearestLocations(center as google.maps.LatLng, locations, remainingSlots);
+                    const mergedLocations = [...listLocations, ...nearestLocations];
+
+                    //@ts-ignore
+                    return setListLocations(mergedLocations);
+                }
+
+                return setListLocations(listLocations);
+            }
+
+            // No locations inside bounds, set the flag and find nearest locations
+            setNoResultsBounds(true);
+            const nearestLocations = findNearestLocations(center as google.maps.LatLng, locations, PAGE_SIZE);
+
+            //@ts-ignore
+            return setListLocations(nearestLocations);
         }
+    };
+
+    const findNearestLocations = (center: google.maps.LatLng, locations: Location[], maxResults: number) => {
+        return locations
+            .map((location) => ({
+                ...location,
+                distance: getDistance(center.lat(), center.lng(), location.position.lat, location.position.lng)
+            }))
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, maxResults);
+    };
+
+    const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLng = (lng2 - lng1) * (Math.PI / 180);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     };
 
     const init = (map: google.maps.Map) => {
@@ -162,6 +212,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
                 const firstLocation = listLocations[0];
                 const newCenter = firstLocation.position;
                 const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
+                setFrozenCenter(newCenter);
 
                 map.setCenter(newCenterOffset);
                 map.setZoom(newZoom);
@@ -177,6 +228,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
         const newCenter = toBeRefinedCenter;
         const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
+        setFrozenCenter(newCenter);
 
         map.setCenter(newCenterOffset);
         map.setZoom(newZoom);
@@ -230,6 +282,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
     const handleOnCurrentLocationClick = useCallback(
         (lat: number, lng: number) => {
             if (!map) {
+                setFrozenCenter({ lat, lng });
                 if (!toBeRefinedCenter) {
                     setToBeRefinedCenter({ lat, lng });
                 }
@@ -261,6 +314,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
         setDefaultZoom(DEFAULT_ZOOM);
         setDefaultCenter(center);
+        setFrozenCenter(null);
         setSelectedLocation(undefined);
         setPendingRefine(true);
     }, [map]);

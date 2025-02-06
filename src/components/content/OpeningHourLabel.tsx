@@ -1,8 +1,7 @@
 import { Chip, ChipProps } from '@nextui-org/react';
 import { format, isAfter, addDays, isBefore, startOfWeek } from 'date-fns';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { Location, LocationOpeningHours, OpeningHoursDaysDaySlot } from 'src/types';
-import { useInterval } from 'usehooks-ts';
 
 export interface OpeningHourLabelProps extends ChipProps {
     location: Location<LocationOpeningHours>;
@@ -14,13 +13,18 @@ export interface OpeningHourLabelProps extends ChipProps {
 const isBetween = (date: Date, from: Date, to: Date) => {
     return isAfter(date, from) && isBefore(date, to);
 };
+export const getDate = (date: string | Date, currentDate: Date, day: number): Date => {
+    if (!date) {
+        return currentDate;
+    }
 
-export const getDate = (date: Date, currentDate: Date, day: number): Date => {
     const start = startOfWeek(currentDate);
     const dateDay = addDays(start, day);
 
-    dateDay.setHours(date.getHours());
-    dateDay.setMinutes(date.getMinutes());
+    const parsedDate = typeof date === 'string' ? new Date(date) : date;
+
+    dateDay.setHours(parsedDate.getHours());
+    dateDay.setMinutes(parsedDate.getMinutes());
 
     return dateDay;
 };
@@ -32,13 +36,7 @@ const OpeningHourLabel = ({
     labelOpenFrom = 'Open vanaf',
     ...props
 }: OpeningHourLabelProps) => {
-    const [date, setDate] = useState<Date>(new Date());
-
-    useInterval(
-        () => setDate(new Date()),
-        10000 // Update every 10 seconds.
-    );
-
+    const date = new Date();
     const open = useMemo(
         () =>
             location.openingHours &&
@@ -48,6 +46,10 @@ const OpeningHourLabel = ({
                 }
 
                 const slot = openingHours.slots.find((slot) => {
+                    if (!slot || (!slot.from && !slot.to)) {
+                        return null;
+                    }
+
                     const from = getDate(slot.from, date, parseInt(day));
                     const to = getDate(slot.to, date, parseInt(day));
 

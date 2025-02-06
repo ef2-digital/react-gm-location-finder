@@ -5,8 +5,15 @@ import dts from 'vite-plugin-dts';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import { peerDependencies } from './package.json';
 import { PluginPure } from 'rollup-plugin-pure';
+import tailwind from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
+    css: {
+        postcss: {
+            plugins: [tailwind, autoprefixer]
+        }
+    },
     plugins: [
         react(),
         tsConfigPaths(),

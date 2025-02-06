@@ -3,6 +3,8 @@ import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location 
 
 // Context.
 export interface LocationFinderContextValue<T extends object = {}> {
+    frozenCenter: Center | null;
+    setFrozenCenter: (center: Center | null) => void;
     map?: google.maps.Map;
     defaultZoom: number;
     defaultCenter: Center;
@@ -13,10 +15,9 @@ export interface LocationFinderContextValue<T extends object = {}> {
     currentPosition?: Center;
     toBeRefinedCenter?: Center;
     toBeRefinedBounds?: google.maps.LatLngBounds;
-    // TODO refactor?
     localeCenterMap?: Map<string, Center>;
     locale?: string;
-
+    noResultsBounds: boolean;
     loading: boolean;
     locations: Location<T>[];
     selectedLocation?: Location<T>;
@@ -32,13 +33,14 @@ export interface LocationFinderContextValue<T extends object = {}> {
     setToBeRefinedCenter: (center: Center | undefined) => void;
     setToBeRefinedBounds: (bounds: google.maps.LatLngBounds) => void;
     setMap: (map: google.maps.Map) => void;
-
-    // Load more functionality.
+    setNoResultsBounds: (noResults: boolean) => void;
     page: number;
     setPage: Dispatch<SetStateAction<number>>;
 }
 
 const LocationFinderContext = createContext<LocationFinderContextValue>({
+    frozenCenter: null,
+    setFrozenCenter: () => {},
     defaultZoom: DEFAULT_ZOOM,
     defaultCenter: DEFAULT_CENTER,
     defaultBounds: DEFAULT_BOUNDS,
@@ -63,7 +65,8 @@ const LocationFinderContext = createContext<LocationFinderContextValue>({
     setToBeRefinedCenter: () => {},
     setToBeRefinedBounds: () => {},
     setMap: () => {},
-    // Load more functionality.
+    setNoResultsBounds: () => {},
+    noResultsBounds: false,
     page: 0,
     setPage: () => {}
 });
@@ -85,7 +88,6 @@ export const LocationFinderProvider = <T extends object = {}>({
     locale,
     localeCenterMap,
     initialCurrentLocation,
-    // TODO move to options!!
     useCurrentLocation
 }: PropsWithChildren<LocationFinderProps<T>>) => {
     const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
@@ -100,6 +102,8 @@ export const LocationFinderProvider = <T extends object = {}>({
     const [currentPosition, setCurrentPosition] = useState<Center | undefined>(initialCurrentLocation);
     const [selectedLocation, setSelectedLocation] = useState<Location | undefined>(undefined);
     const [pendingRefine, setPendingRefine] = useState<boolean>(false);
+    const [noResultsBounds, setNoResultsBounds] = useState<boolean>(false);
+    const [frozenCenter, setFrozenCenter] = useState<Center | null>(null);
 
     // - Location to refine when the map is loaded.
     const [toBeRefinedCenter, setToBeRefinedCenter] = useState<Center | undefined>(undefined);
@@ -138,6 +142,7 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setToBeRefinedCenter,
                 setToBeRefinedBounds,
                 setMap,
+                setNoResultsBounds,
                 map,
                 loading,
                 locations,
@@ -151,9 +156,11 @@ export const LocationFinderProvider = <T extends object = {}>({
                 setPendingRefine,
                 localeCenterMap,
                 locale,
-                // - Load more functionality.
+                noResultsBounds,
                 page,
-                setPage
+                setPage,
+                frozenCenter,
+                setFrozenCenter
             }}
         >
             {children}
