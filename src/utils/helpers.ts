@@ -63,7 +63,7 @@ export const offsetCenter = (
 };
 
 export const defaultOffsetCenter = (map: google.maps.Map, center: Center, width: number, zoom?: number): Center => {
-    return offsetCenter(map, center, width > 768 ? DEFAULT_OFFSET_X : 0, 0, zoom);
+    return offsetCenter(map, center, 0, 0, zoom);
 };
 
 export const localeMap = new Map<string, Locale>([

@@ -17,6 +17,7 @@ const usePlacesFinder = () => {
     // State.
     const [autocomplete, setAutocomplete] = useState<google.maps.places.SearchBox | undefined>(undefined);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [lastPlace, setLastPlace] = useState<google.maps.LatLng | undefined>(undefined);
 
     // Methods.
     const handleOnLoad = useCallback(
@@ -43,17 +44,14 @@ const usePlacesFinder = () => {
     };
 
     const handleOnButtonClick = (e?: MouseEvent<HTMLButtonElement>) => {
+        e?.stopPropagation();
+        e?.preventDefault();
+
         if (!inputRef.current) {
             return;
         }
 
-        google.maps.event.trigger(inputRef.current, 'focus', {});
-        google.maps.event.trigger(inputRef.current, 'keydown', { keyCode: 13 });
-
         setPlaceToBeRefined();
-
-        e?.stopPropagation();
-        e?.preventDefault();
     };
 
     const setPlaceToBeRefined = () => {
@@ -74,6 +72,13 @@ const usePlacesFinder = () => {
         }
 
         const newCenter = geometry.location;
+
+        // Avoid refining the same place repeatedly
+        if (lastPlace?.lat() === newCenter.lat() && lastPlace?.lng() === newCenter.lng()) {
+            return; // Same place, skip refinement
+        }
+
+        setLastPlace(newCenter); // Store the current place to compare next time
 
         if (geometry.viewport) {
             setToBeRefinedBounds(geometry.viewport);

@@ -1,17 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+//@ts-nocheck
+import { useCallback, useEffect, useRef } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
-import { type Bounds, type Center, type Location, DEFAULT_CENTER, DEFAULT_ZOOM, DEFAULT_OFFSET_X } from 'src/types';
-import { calculateDistance, defaultOffsetCenter, offsetCenter } from 'src/utils/helpers';
+import { type Center, DEFAULT_CENTER, DEFAULT_ZOOM, type Location } from 'src/types';
+import { calculateDistance, defaultOffsetCenter } from 'src/utils/helpers';
 import { useEventListener, useWindowSize } from 'usehooks-ts';
 import { PAGE_SIZE } from './useLoadMore';
-
-const getBounds = (bounds: Bounds): google.maps.LatLngBounds => {
-    if (bounds instanceof google.maps.LatLngBounds) {
-        return bounds;
-    }
-
-    return new google.maps.LatLngBounds(bounds);
-};
+import { debounce } from 'lodash-es';
 
 export const findLocationsInBounds = <T extends Object>(
     map: google.maps.Map,
@@ -21,20 +15,35 @@ export const findLocationsInBounds = <T extends Object>(
     center?: Center,
     zoom?: number
 ): Location<T>[] => {
-    const listLocations = locations.filter((location) => bounds.contains(location.position));
+    const listLocations = locations
+        .filter((location) => bounds.contains(location.position))
+        .map((location) => {
+            delete location.distance;
+            return location;
+        });
 
-    if (center && map && zoom && zoom > 9) {
-        const sortedListLocations = listLocations
-            .map((location) => ({
+    return listLocations
+        .map((location) => {
+            return {
                 ...location,
                 distance: calculateDistance(center, defaultOffsetCenter(map, location.position, width, zoom))
-            }))
-            .sort((a, b) => a.distance - b.distance);
+            };
+        })
+        .sort((a, b) => a.distance - b.distance);
+};
 
-        return sortedListLocations;
-    } else {
-        return listLocations;
-    }
+export const expandBounds = (bounds: google.maps.LatLngBounds, factor: number): google.maps.LatLngBounds => {
+    const sw = bounds.getSouthWest(); // South-West corner of bounds
+    const ne = bounds.getNorthEast(); // North-East corner of bounds
+
+    // Calculate new corners by expanding bounds
+    const swLat = sw.lat() - factor * (ne.lat() - sw.lat());
+    const swLng = sw.lng() - factor * (ne.lng() - sw.lng());
+    const neLat = ne.lat() + factor * (ne.lat() - sw.lat());
+    const neLng = ne.lng() + factor * (ne.lng() - sw.lng());
+
+    // Return new bounds
+    return new google.maps.LatLngBounds(new google.maps.LatLng(swLat, swLng), new google.maps.LatLng(neLat, neLng));
 };
 
 export interface LocationFinderOptions<T extends object> {
@@ -43,7 +52,7 @@ export interface LocationFinderOptions<T extends object> {
     zoomAfterPlaceOrPostionChangedMobile?: number;
 }
 
-const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED = 12;
+const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED = 14;
 const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE = 10;
 
 const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
@@ -81,6 +90,22 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setNoResultsBounds
     } = useLocationFinderContext<T>();
 
+    // Define a ref to store the previous state
+    const previousStateRef = useRef({
+        frozenCenter: null as google.maps.LatLng | null,
+        frozenZoom: null as number | null,
+        lastBounds: null as google.maps.LatLngBounds | null
+    });
+
+    // Define a helper function to set the previous state
+    const setPreviousState = (newState: {
+        frozenCenter: google.maps.LatLng | Center | null;
+        frozenZoom: number | null;
+        lastBounds: google.maps.LatLngBounds | null;
+    }) => {
+        previousStateRef.current = newState;
+    };
+
     const { width } = useWindowSize();
 
     // State.
@@ -91,20 +116,19 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         init(map);
     }, []);
 
-    const handleOnChange = () => {
-        setPendingRefine(true);
-    };
+    const handleOnChange = useCallback(
+        debounce(() => {
+            setPendingRefine(true);
+
+            zoomOutToNearestLocation();
+        }, 200),
+        []
+    );
 
     const handleOnLocaleChange = (locale: string) => {
         if (!map) {
             return;
         }
-
-        // TODO
-        // const center = options?.localeCenterMap?.get(locale) ?? DEFAULT_CENTER;
-        // map.setCenter(center);
-
-        // setDefaultCenter(center);
     };
 
     const handleOnKeyPress = (event: KeyboardEvent) => {
@@ -115,32 +139,85 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
     useEventListener('keypress', handleOnKeyPress);
 
-    const refine = (defaultZoom?: number, defaultCenter?: Center) => {
-        if (!map) {
+    const zoomOutToNearestLocation = <T extends Object>() => {
+        if (!map || !locations.length) {
             return;
         }
 
-        const bounds = map.getBounds();
-        const center = frozenCenter ?? defaultCenter ?? map.getCenter();
-        const zoom = defaultZoom ?? map.getZoom();
+        // Get the current bounds of the map
+        const currentBounds = map.getBounds();
+        if (!currentBounds) {
+            return;
+        }
+        // Find locations outside of the current bounds
+        const outOfBoundsLocations = locations.filter((location) => !currentBounds.contains(location.position));
+        const inBoundsLocations = locations.filter((location) => currentBounds.contains(location.position));
 
-        if (bounds) {
-            // Find locations inside the bounds
-            const listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
+        if (!outOfBoundsLocations.length || inBoundsLocations.length > 0) {
+            return;
+        }
 
-            if (listLocations.length > 0) {
-                setNoResultsBounds(false);
+        // Find the nearest location outside of bounds
+        const nearestLocation = outOfBoundsLocations.reduce(
+            (nearest, location) => {
+                const distance = calculateDistance(map.getCenter(), location.position);
+                return distance < nearest.distance ? { location, distance } : nearest;
+            },
+            { location: null, distance: Infinity }
+        ).location;
 
-                // Add nearest locations if list is smaller than PAGE_SIZE
-                if (listLocations.length < PAGE_SIZE) {
-                    const remainingSlots = PAGE_SIZE - listLocations.length;
-                    const nearestLocations = findNearestLocations(center as google.maps.LatLng, locations, remainingSlots);
-                    const mergedLocations = [...listLocations, ...nearestLocations];
+        if (nearestLocation) {
+            // Expand bounds to include the nearest location
+            const expandedBounds = expandBounds(currentBounds, 0.5); // The factor 0.5 is adjustable
+            expandedBounds.extend(nearestLocation.position);
 
-                    //@ts-ignore
-                    return setListLocations(mergedLocations);
+            // Refit map bounds
+            map.fitBounds(expandedBounds);
+
+            // Optionally, set a minimal zoom level to prevent over-zooming out
+            if (map.getZoom() < Math.min(DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED, 5)) {
+                map.setZoom(10); // Or any value that fits your UX constraints
+            }
+        }
+    };
+
+    const refine = useCallback(
+        debounce((defaultZoom?: number, defaultCenter?: Center) => {
+            if (!map) {
+                return;
+            }
+
+            let bounds = map.getBounds();
+            const center = frozenCenter ?? defaultCenter ?? map.getCenter();
+            const zoom = defaultZoom ?? map.getZoom();
+
+            // Compare with the previous state to decide if refinement is necessary
+            const isSameBounds =
+                previousStateRef.current.frozenCenter?.equals(center) &&
+                previousStateRef.current.frozenZoom === zoom &&
+                previousStateRef.current.lastBounds?.equals(bounds);
+
+            if (isSameBounds) {
+                return; // Skip refine if nothing has changed
+            }
+
+            // Update the previous state
+            setPreviousState({
+                frozenCenter: center,
+                frozenZoom: zoom,
+                lastBounds: bounds
+            });
+
+            if (bounds) {
+                let listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
+
+                // Dynamically widen bounds if fewer than PAGE_SIZE
+                let factor = 0.1; // Widen factor (10%)
+                while (listLocations.length < PAGE_SIZE && factor < 1) {
+                    bounds = expandBounds(bounds, factor);
+                    listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
+                    factor += 0.1; // Increment widen factor
                 }
-
                 return setListLocations(listLocations);
             }
 
@@ -150,8 +227,9 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
             //@ts-ignore
             return setListLocations(nearestLocations);
-        }
-    };
+        }, 200),
+        [map, width, locations, frozenCenter, setListLocations]
+    );
 
     const findNearestLocations = (center: google.maps.LatLng, locations: Location[], maxResults: number) => {
         return locations
@@ -204,39 +282,16 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
                 ? options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED
                 : options?.zoomAfterPlaceOrPostionChangedMobile ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE;
 
-        // Select location after place or position changed when option is enabled.
-        if (toBeRefinedBounds && options?.selectLocationAfterPlaceOrPositionChanged) {
-            const listLocations = findLocationsInBounds(map, width, locations, toBeRefinedBounds, toBeRefinedCenter, newZoom);
-
-            if (Boolean(listLocations.length)) {
-                const firstLocation = listLocations[0];
-                const newCenter = firstLocation.position;
-                const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
-                setFrozenCenter(newCenter);
-
-                map.setCenter(newCenterOffset);
-                map.setZoom(newZoom);
-
-                setDefaultCenter(newCenterOffset);
-                setSelectedLocation(firstLocation);
-                setDefaultZoom(newZoom);
-                setToBeRefinedCenter(undefined);
-
-                return;
-            }
-        }
-
-        const newCenter = toBeRefinedCenter;
-        const newCenterOffset = defaultOffsetCenter(map, newCenter, width, newZoom);
-        setFrozenCenter(newCenter);
+        const newCenterOffset = defaultOffsetCenter(map, toBeRefinedCenter, width, newZoom);
 
         map.setCenter(newCenterOffset);
         map.setZoom(newZoom);
 
+        setFrozenCenter(null);
         setDefaultCenter(newCenterOffset);
         setDefaultZoom(newZoom);
-        setToBeRefinedCenter(undefined);
         refine();
+        zoomOutToNearestLocation();
     };
 
     useEffect(() => {

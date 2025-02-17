@@ -1,10 +1,11 @@
 import { GoogleMap, GoogleMapProps } from '@react-google-maps/api';
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useCallback, useMemo } from 'react';
 import useLocationFinder from 'src/hooks/useLocationFinder';
 import Marker from './Marker';
 import MapContent from './MapContent';
 import { classNamesTailwind } from 'src/utils/helpers';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
+import { throttle } from 'lodash-es';
 
 export interface MapProps extends GoogleMapProps {}
 
@@ -24,15 +25,21 @@ const Map = ({ children, mapContainerClassName, onLoad, onIdle, onDragEnd, onZoo
         setPage(0);
     };
 
-    const handleOnIdle = () => {
-        onIdle?.();
-        onIdleLocationFinder();
-    };
+    const handleOnIdle = useCallback(
+        throttle(() => {
+            onIdle?.();
+            onIdleLocationFinder();
+        }, 200),
+        [onIdle]
+    );
 
-    const handleOnDragEnd = () => {
-        onDragEnd?.();
-        onChange();
-    };
+    const handleOnDragEnd = useCallback(
+        throttle(() => {
+            onDragEnd?.();
+            onChange();
+        }, 200),
+        [onDragEnd]
+    );
 
     const handleOnZoomChanged = () => {
         onZoomChanged?.();
