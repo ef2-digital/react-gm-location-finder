@@ -21,7 +21,12 @@ const Demo = () => {
     return (
         <NextUIProvider>
             {isLoaded ? <div>Loaded</div> : <div>Loading</div>}
-            <LocationFinderProvider loading={!isLoaded} locations={locations} useCurrentLocation={false}>
+            <LocationFinderProvider
+                loading={!isLoaded}
+                locations={locations}
+                // locations={locations.map((location) => location.attributes)}
+                useCurrentLocation={true}
+            >
                 <Map mapContainerStyle={{ height: '500px' }}>
                     <Markers />
                 </Map>

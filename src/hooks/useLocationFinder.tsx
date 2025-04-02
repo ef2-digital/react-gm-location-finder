@@ -90,6 +90,19 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setNoResultsBounds
     } = useLocationFinderContext<T>();
 
+    useEffect(() => {
+        if (!map || !listLocations || listLocations.length === 0) {
+            console.log('Map or listLocations is not ready yet.');
+            return;
+        }
+
+        // Automatically center on the closest pin in bounds when listLocations updates
+        centerOnClosestPin();
+
+        // Optionally: Zoom out to include all or nearest items that may not be in bounds
+        zoomOutToNearestLocation();
+    }, [map, listLocations]); // Trigger this effect whenever `map` or `listLocations`
+
     // Define a ref to store the previous state
     const previousStateRef = useRef({
         frozenCenter: null as google.maps.LatLng | null,
@@ -119,8 +132,6 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
     const handleOnChange = useCallback(
         debounce(() => {
             setPendingRefine(true);
-
-            zoomOutToNearestLocation();
         }, 200),
         []
     );
@@ -139,6 +150,38 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
     useEventListener('keypress', handleOnKeyPress);
 
+    const centerOnClosestPin = <T extends Object>() => {
+        // Ensure the map and location data exist
+        if (!map || !locations.length) {
+            return;
+        }
+
+        const currentBounds = map.getBounds(); // Get the current visible bounds
+
+        if (!currentBounds) {
+            return;
+        }
+
+        // Use the existing helper `findLocationsInBounds`
+        const inBoundsLocations = findLocationsInBounds(
+            map, // Current map object
+            width, // Current window width
+            locations, // All available locations
+            currentBounds, // Current visible bounds
+            map.getCenter(), // Current center
+            map.getZoom() // Current zoom level
+        );
+
+        // If there are no locations in bounds, do nothing
+        if (!inBoundsLocations.length) return;
+
+        // The first location is the closest since `findLocationsInBounds` already sorts them by distance
+        const closestLocation = inBoundsLocations[0];
+
+        // Center the map to the closest pin
+        map.setCenter(closestLocation.position);
+    };
+
     const zoomOutToNearestLocation = <T extends Object>() => {
         if (!map || !locations.length) {
             return;
@@ -149,6 +192,7 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         if (!currentBounds) {
             return;
         }
+
         // Find locations outside of the current bounds
         const outOfBoundsLocations = locations.filter((location) => !currentBounds.contains(location.position));
         const inBoundsLocations = locations.filter((location) => currentBounds.contains(location.position));
@@ -351,8 +395,11 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             map.setZoom(newZoom);
             map.panTo(defaultOffsetCenter(map, { lat, lng }, width, newZoom));
 
+            console.log('Current location clicked:', lat, lng, map);
+
             setSelectedLocation(undefined);
             setPendingRefine(true);
+            refine();
         },
         [map, width, toBeRefinedCenter]
     );
