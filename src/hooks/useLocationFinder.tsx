@@ -2,7 +2,14 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocationFinderContext } from 'src/contexts/LocationFinderContext';
 import { type Center, DEFAULT_CENTER, DEFAULT_ZOOM, type Location } from 'src/types';
-import { calculateDistance, defaultOffsetCenter } from 'src/utils/helpers';
+import {
+    calculateDistance,
+    defaultOffsetCenter,
+    setLatLngSearchParams,
+    getLatLngSearchParams,
+    clearLatLngSearchParams,
+    getCenterCoordinates
+} from 'src/utils/helpers';
 import { useEventListener, useWindowSize } from 'usehooks-ts';
 import { PAGE_SIZE } from './useLoadMore';
 import { debounce } from 'lodash-es';
@@ -33,16 +40,14 @@ export const findLocationsInBounds = <T extends Object>(
 };
 
 export const expandBounds = (bounds: google.maps.LatLngBounds, factor: number): google.maps.LatLngBounds => {
-    const sw = bounds.getSouthWest(); // South-West corner of bounds
-    const ne = bounds.getNorthEast(); // North-East corner of bounds
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
 
-    // Calculate new corners by expanding bounds
     const swLat = sw.lat() - factor * (ne.lat() - sw.lat());
     const swLng = sw.lng() - factor * (ne.lng() - sw.lng());
     const neLat = ne.lat() + factor * (ne.lat() - sw.lat());
     const neLng = ne.lng() + factor * (ne.lng() - sw.lng());
 
-    // Return new bounds
     return new google.maps.LatLngBounds(new google.maps.LatLng(swLat, swLng), new google.maps.LatLng(neLat, neLng));
 };
 
@@ -56,7 +61,6 @@ const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED = 14;
 const DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE = 10;
 
 const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>) => {
-    // Hooks.
     const {
         frozenCenter,
         setFrozenCenter,
@@ -90,140 +94,75 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setNoResultsBounds
     } = useLocationFinderContext<T>();
 
-    useEffect(() => {
-        if (!map || !listLocations || listLocations.length === 0) {
-            console.log('Map or listLocations is not ready yet.');
-            return;
-        }
-
-        // Automatically center on the closest pin in bounds when listLocations updates
-        centerOnClosestPin();
-
-        // Optionally: Zoom out to include all or nearest items that may not be in bounds
-        zoomOutToNearestLocation();
-    }, [map, listLocations]); // Trigger this effect whenever `map` or `listLocations`
+    const { width } = useWindowSize();
 
     // Define a ref to store the previous state
     const previousStateRef = useRef({
-        frozenCenter: null as google.maps.LatLng | null,
+        frozenCenter: null as Center | null,
         frozenZoom: null as number | null,
         lastBounds: null as google.maps.LatLngBounds | null
     });
 
-    // Define a helper function to set the previous state
-    const setPreviousState = (newState: {
-        frozenCenter: google.maps.LatLng | Center | null;
-        frozenZoom: number | null;
-        lastBounds: google.maps.LatLngBounds | null;
-    }) => {
-        previousStateRef.current = newState;
-    };
-
-    const { width } = useWindowSize();
-
-    // State.
-
-    // Methods.
-    const handleOnLoad = useCallback((map: google.maps.Map) => {
-        setMap(map);
-        init(map);
+    // Helper function to compare two centers (handles both LatLng objects and plain literals)
+    const centersAreEqual = useCallback((a: Center | null | undefined, b: Center | null | undefined): boolean => {
+        if (!a || !b) return false;
+        const coordsA = getCenterCoordinates(a);
+        const coordsB = getCenterCoordinates(b);
+        return coordsA.lat === coordsB.lat && coordsA.lng === coordsB.lng;
     }, []);
 
-    const handleOnChange = useCallback(
-        debounce(() => {
-            setPendingRefine(true);
-        }, 200),
+    // Helper function to compare two bounds
+    const boundsAreEqual = useCallback(
+        (a: google.maps.LatLngBounds | null | undefined, b: google.maps.LatLngBounds | null | undefined): boolean => {
+            if (!a || !b) return false;
+            return a.equals(b);
+        },
         []
     );
 
-    const handleOnLocaleChange = (locale: string) => {
-        if (!map) {
-            return;
-        }
-    };
+    // Define a helper function to set the previous state
+    const setPreviousState = useCallback(
+        (newState: { frozenCenter: Center | null; frozenZoom: number | null; lastBounds: google.maps.LatLngBounds | null }) => {
+            previousStateRef.current = newState;
+        },
+        []
+    );
 
-    const handleOnKeyPress = (event: KeyboardEvent) => {
-        if (event.key === 'Backspace' && selectedLocation) {
-            handleOnBackClick();
-        }
-    };
-
-    useEventListener('keypress', handleOnKeyPress);
-
-    const centerOnClosestPin = <T extends Object>() => {
-        // Ensure the map and location data exist
+    // Helper functions
+    const centerOnClosestPin = useCallback(() => {
         if (!map || !locations.length) {
             return;
         }
 
-        const currentBounds = map.getBounds(); // Get the current visible bounds
-
-        if (!currentBounds) {
-            return;
-        }
-
-        // Use the existing helper `findLocationsInBounds`
-        const inBoundsLocations = findLocationsInBounds(
-            map, // Current map object
-            width, // Current window width
-            locations, // All available locations
-            currentBounds, // Current visible bounds
-            map.getCenter(), // Current center
-            map.getZoom() // Current zoom level
-        );
-
-        // If there are no locations in bounds, do nothing
-        if (!inBoundsLocations.length) return;
-
-        // The first location is the closest since `findLocationsInBounds` already sorts them by distance
-        const closestLocation = inBoundsLocations[0];
-
-        // Center the map to the closest pin
-        map.setCenter(closestLocation.position);
-    };
-
-    const zoomOutToNearestLocation = <T extends Object>() => {
-        if (!map || !locations.length) {
-            return;
-        }
-
-        // Get the current bounds of the map
         const currentBounds = map.getBounds();
         if (!currentBounds) {
             return;
         }
 
-        // Find locations outside of the current bounds
-        const outOfBoundsLocations = locations.filter((location) => !currentBounds.contains(location.position));
-        const inBoundsLocations = locations.filter((location) => currentBounds.contains(location.position));
+        const inBoundsLocations = findLocationsInBounds(map, width, locations, currentBounds, map.getCenter(), map.getZoom());
 
-        if (!outOfBoundsLocations.length || inBoundsLocations.length > 0) {
-            return;
-        }
+        if (!inBoundsLocations.length) return;
 
-        // Find the nearest location outside of bounds
-        const nearestLocation = outOfBoundsLocations.reduce(
-            (nearest, location) => {
-                const distance = calculateDistance(map.getCenter(), location.position);
-                return distance < nearest.distance ? { location, distance } : nearest;
-            },
-            { location: null, distance: Infinity }
-        ).location;
-
-        if (nearestLocation) {
-            // Expand bounds to include the nearest location
-            const expandedBounds = expandBounds(currentBounds, 0.5); // The factor 0.5 is adjustable
-            expandedBounds.extend(nearestLocation.position);
-
-            // Refit map bounds
-            map.fitBounds(expandedBounds);
-
-            // Optionally, set a minimal zoom level to prevent over-zooming out
-            if (map.getZoom() < Math.min(DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED, 5)) {
-                map.setZoom(10); // Or any value that fits your UX constraints
+        const closestLocation = inBoundsLocations[0];
+        const currentCenter = map.getCenter();
+        if (currentCenter) {
+            const distance = calculateDistance(currentCenter, closestLocation.position);
+            // Only auto-center if within 50km to avoid jarring jumps
+            if (distance < 50) {
+                map.panTo(closestLocation.position);
             }
         }
-    };
+    }, [map, locations, width]);
+
+    const findNearestLocations = useCallback((center: google.maps.LatLng, locations: Location[], maxResults: number) => {
+        return locations
+            .map((location) => ({
+                ...location,
+                distance: calculateDistance(center, location.position)
+            }))
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, maxResults);
+    }, []);
 
     const refine = useCallback(
         debounce((defaultZoom?: number, defaultCenter?: Center) => {
@@ -237,12 +176,12 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
             // Compare with the previous state to decide if refinement is necessary
             const isSameBounds =
-                previousStateRef.current.frozenCenter?.equals(center) &&
+                centersAreEqual(previousStateRef.current.frozenCenter, center) &&
                 previousStateRef.current.frozenZoom === zoom &&
-                previousStateRef.current.lastBounds?.equals(bounds);
+                boundsAreEqual(previousStateRef.current.lastBounds, bounds);
 
             if (isSameBounds) {
-                return; // Skip refine if nothing has changed
+                return;
             }
 
             // Update the previous state
@@ -256,54 +195,43 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
                 let listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
 
                 // Dynamically widen bounds if fewer than PAGE_SIZE
-                let factor = 0.1; // Widen factor (10%)
+                let factor = 0.1;
                 while (listLocations.length < PAGE_SIZE && factor < 1) {
                     bounds = expandBounds(bounds, factor);
                     listLocations = findLocationsInBounds(map, width, locations, bounds, center, zoom);
-                    factor += 0.1; // Increment widen factor
+                    factor += 0.1;
                 }
                 return setListLocations(listLocations);
             }
 
-            // No locations inside bounds, set the flag and find nearest locations
+            // No locations inside bounds
             setNoResultsBounds(true);
             const nearestLocations = findNearestLocations(center as google.maps.LatLng, locations, PAGE_SIZE);
-
             //@ts-ignore
             return setListLocations(nearestLocations);
-        }, 200),
-        [map, width, locations, frozenCenter, setListLocations]
+        }, 300), // Increased from 200ms to 300ms
+        [
+            map,
+            width,
+            locations,
+            frozenCenter,
+            centersAreEqual,
+            boundsAreEqual,
+            setPreviousState,
+            findNearestLocations,
+            setListLocations,
+            setNoResultsBounds
+        ]
     );
 
-    const findNearestLocations = (center: google.maps.LatLng, locations: Location[], maxResults: number) => {
-        return locations
-            .map((location) => ({
-                ...location,
-                distance: getDistance(center.lat(), center.lng(), location.position.lat, location.position.lng)
-            }))
-            .sort((a, b) => a.distance - b.distance)
-            .slice(0, maxResults);
-    };
-
-    const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * (Math.PI / 180);
-        const dLng = (lng2 - lng1) * (Math.PI / 180);
-
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    };
-
-    const init = (map: google.maps.Map) => {
-        map.setZoom(defaultZoom);
-        map.setCenter(defaultCenter);
-
-        refine(defaultZoom, defaultCenter);
-    };
+    const init = useCallback(
+        (map: google.maps.Map) => {
+            map.setZoom(defaultZoom);
+            map.setCenter(defaultCenter);
+            refine(defaultZoom, defaultCenter);
+        },
+        [defaultZoom, defaultCenter, refine]
+    );
 
     const reset = useCallback(() => {
         if (!map) {
@@ -312,45 +240,42 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
 
         map.setZoom(defaultZoom);
         map.setCenter(defaultCenter);
-
         setPendingRefine(true);
-    }, [map]);
+    }, [map, defaultZoom, defaultCenter, setPendingRefine]);
 
-    const updateMapAfterPlaceChanged = (map: google.maps.Map) => {
-        if (!toBeRefinedCenter) {
-            return;
-        }
+    // Event handlers - properly memoized
+    const handleOnLoad = useCallback(
+        (map: google.maps.Map) => {
+            setMap(map);
+            init(map);
+        },
+        [setMap, init]
+    );
 
-        const newZoom =
-            width > 768
-                ? options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED
-                : options?.zoomAfterPlaceOrPostionChangedMobile ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE;
+    const handleOnChange = useCallback(
+        debounce(() => {
+            setPendingRefine(true);
+        }, 300),
+        [setPendingRefine]
+    );
 
-        const newCenterOffset = defaultOffsetCenter(map, toBeRefinedCenter, width, newZoom);
-
-        map.setCenter(newCenterOffset);
-        map.setZoom(newZoom);
-
-        setFrozenCenter(null);
-        setDefaultCenter(newCenterOffset);
-        setDefaultZoom(newZoom);
-        refine();
-        zoomOutToNearestLocation();
-    };
-
-    useEffect(() => {
-        if (map && toBeRefinedCenter) {
-            // Rename.
-            updateMapAfterPlaceChanged(map);
-        }
-    }, [toBeRefinedBounds, toBeRefinedCenter, map]);
-
-    const handleOnIdle = () => {
+    const handleOnIdle = useCallback(() => {
         if (pendingRefine) {
             setPendingRefine(false);
             refine();
         }
-    };
+    }, [pendingRefine, refine, setPendingRefine]);
+
+    const handleOnKeyPress = useCallback(
+        (event: KeyboardEvent) => {
+            if (event.key === 'Backspace' && selectedLocation) {
+                handleOnBackClick();
+            }
+        },
+        [selectedLocation]
+    );
+
+    useEventListener('keypress', handleOnKeyPress);
 
     const handleOnLocationClick = useCallback(
         (id: Location<T>['id']) => {
@@ -375,17 +300,18 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             setSelectedLocation(location);
             setPendingRefine(true);
         },
-        [map, width]
+        [map, width, locations, setSelectedLocation, setPendingRefine]
     );
 
     const handleOnCurrentLocationClick = useCallback(
         (lat: number, lng: number) => {
+            setLatLngSearchParams(lat, lng);
+
             if (!map) {
                 setFrozenCenter({ lat, lng });
                 if (!toBeRefinedCenter) {
                     setToBeRefinedCenter({ lat, lng });
                 }
-
                 return;
             }
 
@@ -395,16 +321,16 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
             map.setZoom(newZoom);
             map.panTo(defaultOffsetCenter(map, { lat, lng }, width, newZoom));
 
-            console.log('Current location clicked:', lat, lng, map);
-
             setSelectedLocation(undefined);
             setPendingRefine(true);
             refine();
         },
-        [map, width, toBeRefinedCenter]
+        [map, width, toBeRefinedCenter, setFrozenCenter, setToBeRefinedCenter, setSelectedLocation, setPendingRefine, refine]
     );
 
     const handleOnBackClick = useCallback(() => {
+        clearLatLngSearchParams();
+
         if (!map) {
             return;
         }
@@ -419,22 +345,72 @@ const useLocationFinder = <T extends Object>(options?: LocationFinderOptions<T>)
         setFrozenCenter(null);
         setSelectedLocation(undefined);
         setPendingRefine(true);
-    }, [map]);
+    }, [map, localeCenterMap, locale, setDefaultZoom, setDefaultCenter, setFrozenCenter, setSelectedLocation, setPendingRefine]);
 
-    // Life cycle.
+    const handleOnLocaleChange = useCallback(
+        (locale: string) => {
+            if (!map) {
+                return;
+            }
+        },
+        [map]
+    );
+
+    // Effects
     useEffect(() => {
-        if (map) {
-            map.setZoom(defaultZoom);
-            setPendingRefine(true);
+        if (!map || !listLocations || listLocations.length === 0) {
+            return;
         }
-    }, [map, defaultZoom]);
+
+        if (!selectedLocation) {
+            centerOnClosestPin();
+        }
+    }, [map, listLocations.length, selectedLocation, centerOnClosestPin]);
 
     useEffect(() => {
-        if (map) {
-            map.panTo(defaultCenter);
-            setPendingRefine(true);
+        if (!map || !toBeRefinedCenter) {
+            return;
         }
-    }, [map, defaultCenter]);
+
+        const centerToProcess = toBeRefinedCenter;
+        const coords = getCenterCoordinates(centerToProcess);
+
+        const existingParams = getLatLngSearchParams();
+        const isDefaultCenter = coords.lat === DEFAULT_CENTER.lat && coords.lng === DEFAULT_CENTER.lng;
+
+        const newZoom =
+            width > 768
+                ? options?.zoomAfterPlaceOrPostionChanged ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED
+                : options?.zoomAfterPlaceOrPostionChangedMobile ?? DEFAULT_ZOOM_AFTER_PLACE_OR_POSITION_CHANGED_MOBILE;
+
+        // Always update URL with zoom when user searches
+        if (existingParams || !isDefaultCenter) {
+            setLatLngSearchParams(coords.lat, coords.lng, newZoom);
+        }
+
+        const newCenterOffset = defaultOffsetCenter(map, centerToProcess, width, newZoom);
+        const newCenterLiteral = getCenterCoordinates(newCenterOffset);
+
+        map.setCenter(newCenterLiteral);
+        map.setZoom(newZoom);
+
+        setFrozenCenter(null);
+        setDefaultCenter(newCenterLiteral);
+        setDefaultZoom(newZoom);
+        setToBeRefinedCenter(undefined);
+        setPendingRefine(true);
+    }, [
+        toBeRefinedCenter,
+        map,
+        width,
+        options?.zoomAfterPlaceOrPostionChanged,
+        options?.zoomAfterPlaceOrPostionChangedMobile,
+        setFrozenCenter,
+        setDefaultCenter,
+        setDefaultZoom,
+        setToBeRefinedCenter,
+        setPendingRefine
+    ]);
 
     return {
         map,

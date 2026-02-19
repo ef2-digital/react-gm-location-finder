@@ -29,22 +29,22 @@ const Map = ({ children, mapContainerClassName, onLoad, onIdle, onDragEnd, onZoo
         throttle(() => {
             onIdle?.();
             onIdleLocationFinder();
-        }, 200),
-        [onIdle]
+        }, 500), // Increased from 200ms to 500ms to reduce refine calls
+        [onIdle, onIdleLocationFinder]
     );
 
     const handleOnDragEnd = useCallback(
         throttle(() => {
             onDragEnd?.();
             onChange();
-        }, 200),
-        [onDragEnd]
+        }, 500), // Increased from 200ms to 500ms
+        [onDragEnd, onChange]
     );
 
-    const handleOnZoomChanged = () => {
+    const handleOnZoomChanged = useCallback(() => {
         onZoomChanged?.();
         onChange();
-    };
+    }, [onZoomChanged, onChange]);
 
     if (loading) {
         return <div className={className}>{children}</div>;

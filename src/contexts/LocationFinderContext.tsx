@@ -1,5 +1,17 @@
-import { createContext, Dispatch, PropsWithChildren, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
+import {
+    createContext,
+    Dispatch,
+    PropsWithChildren,
+    ReactNode,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState
+} from 'react';
 import { Bounds, Center, DEFAULT_BOUNDS, DEFAULT_CENTER, DEFAULT_ZOOM, Location } from 'src/types';
+import { getLatLngSearchParams } from 'src/utils/helpers';
 
 // Context.
 export interface LocationFinderContextValue<T extends object = {}> {
@@ -79,6 +91,8 @@ export interface LocationFinderProps<T extends object = {}> {
     loading: boolean;
     initialCurrentLocation?: Center | undefined;
     useCurrentLocation: boolean;
+    defaultCenter?: Center;
+    defaultZoom?: number;
 }
 
 export const LocationFinderProvider = <T extends object = {}>({
@@ -88,13 +102,22 @@ export const LocationFinderProvider = <T extends object = {}>({
     locale,
     localeCenterMap,
     initialCurrentLocation,
-    useCurrentLocation
+    useCurrentLocation,
+    defaultCenter: initialDefaultCenter,
+    defaultZoom: initialDefaultZoom
 }: PropsWithChildren<LocationFinderProps<T>>) => {
-    const center = localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER;
+    const searchParamsCenter = getLatLngSearchParams();
+    const center =
+        searchParamsCenter ??
+        initialDefaultCenter ??
+        (localeCenterMap && locale ? localeCenterMap.get(locale) ?? DEFAULT_CENTER : DEFAULT_CENTER);
+
+    // If URL has zoom param, use it; otherwise use prop or default
+    const initialZoom = searchParamsCenter?.zoom ?? initialDefaultZoom ?? DEFAULT_ZOOM;
 
     // Context.
     const [map, setMap] = useState<google.maps.Map>();
-    const [defaultZoom, setDefaultZoom] = useState<number>(DEFAULT_ZOOM);
+    const [defaultZoom, setDefaultZoom] = useState<number>(initialZoom);
     const [defaultCenter, setDefaultCenter] = useState<Center>(center);
     const [defaultBounds, setDefaultBounds] = useState<Bounds>(DEFAULT_BOUNDS);
     const [defaultSearch, setDefaultSearch] = useState<string | undefined>(undefined);
@@ -118,54 +141,96 @@ export const LocationFinderProvider = <T extends object = {}>({
             navigator.geolocation.getCurrentPosition((position) => {
                 setCurrentPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
             });
-
-            if (!toBeRefinedCenter) {
-                setToBeRefinedCenter(center);
-            }
+            // Don't set toBeRefinedCenter here - that should only be triggered by user search
+            // The map will use the default center from state
         }
-    }, []);
+    }, [useCurrentLocation]);
+
+    // Handle initial default center/zoom from props (e.g., from URL params)
+    useEffect(() => {
+        if (!map) return;
+
+        const centerToUse = initialDefaultCenter || searchParamsCenter;
+        const zoomToUse = searchParamsCenter?.zoom ?? initialDefaultZoom;
+
+        // Only set map if we have URL params or initial props that differ from defaults
+        if (centerToUse && zoomToUse !== undefined) {
+            // Set the map position and zoom
+            map.setCenter(centerToUse);
+            map.setZoom(zoomToUse);
+
+            // Update context state
+            setDefaultCenter(centerToUse);
+            setDefaultZoom(zoomToUse);
+
+            // Trigger refinement - onIdle will call refine() to filter locations by distance
+            // Use a small timeout to ensure map is fully positioned
+            setTimeout(() => {
+                setPendingRefine(true);
+            }, 150);
+        }
+    }, [map]); // Only run when map becomes available
+
+    // Memoize context value to prevent unnecessary re-renders
+    const contextValue = useMemo<LocationFinderContextValue<T>>(
+        () => ({
+            defaultBounds,
+            defaultCenter,
+            defaultZoom,
+            defaultSearch,
+            toBeRefinedCenter,
+            toBeRefinedBounds,
+            setDefaultZoom,
+            setDefaultBounds,
+            setDefaultCenter,
+            setDefaultSearch,
+            setToBeRefinedCenter,
+            setToBeRefinedBounds,
+            setMap,
+            setNoResultsBounds,
+            map,
+            loading,
+            locations,
+            listLocations: listLocations as Location<T>[],
+            setListLocations,
+            currentPosition,
+            setCurrentPosition,
+            selectedLocation: selectedLocation as Location<T> | undefined,
+            setSelectedLocation,
+            pendingRefine,
+            setPendingRefine,
+            localeCenterMap,
+            locale,
+            noResultsBounds,
+            page,
+            setPage,
+            frozenCenter,
+            setFrozenCenter
+        }),
+        [
+            defaultBounds,
+            defaultCenter,
+            defaultZoom,
+            defaultSearch,
+            toBeRefinedCenter,
+            toBeRefinedBounds,
+            map,
+            loading,
+            locations,
+            listLocations,
+            currentPosition,
+            selectedLocation,
+            pendingRefine,
+            localeCenterMap,
+            locale,
+            noResultsBounds,
+            page,
+            frozenCenter
+        ]
+    );
 
     // Render.
-    return (
-        <LocationFinderContext.Provider
-            value={{
-                defaultBounds,
-                defaultCenter,
-                defaultZoom,
-                defaultSearch,
-                toBeRefinedCenter,
-                toBeRefinedBounds,
-                setDefaultZoom,
-                setDefaultBounds,
-                setDefaultCenter,
-                setDefaultSearch,
-                setToBeRefinedCenter,
-                setToBeRefinedBounds,
-                setMap,
-                setNoResultsBounds,
-                map,
-                loading,
-                locations,
-                listLocations,
-                setListLocations,
-                currentPosition,
-                setCurrentPosition,
-                selectedLocation,
-                setSelectedLocation,
-                pendingRefine,
-                setPendingRefine,
-                localeCenterMap,
-                locale,
-                noResultsBounds,
-                page,
-                setPage,
-                frozenCenter,
-                setFrozenCenter
-            }}
-        >
-            {children}
-        </LocationFinderContext.Provider>
-    );
+    return <LocationFinderContext.Provider value={contextValue as any}>{children}</LocationFinderContext.Provider>;
 };
 
 export const useLocationFinderContext = <T extends object = {}>(): LocationFinderContextValue<T> => {
