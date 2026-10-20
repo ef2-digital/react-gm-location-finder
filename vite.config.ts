@@ -5,17 +5,12 @@ import dts from 'vite-plugin-dts';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import { peerDependencies } from './package.json';
 import { PluginPure } from 'rollup-plugin-pure';
-import tailwind from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-    css: {
-        postcss: {
-            plugins: [tailwind, autoprefixer]
-        }
-    },
     plugins: [
         react(),
+        tailwindcss(),
         tsConfigPaths(),
         dts({
             rollupTypes: true
@@ -33,7 +28,8 @@ export default defineConfig({
             fileName: (format) => `react-gm-location-finder.${format}.js`
         },
         rollupOptions: {
-            external: [...Object.keys(peerDependencies)]
+            // Peer dependencies and their subpaths (react/jsx-runtime) stay with the consumer.
+            external: (id) => Object.keys(peerDependencies).some((name) => id === name || id.startsWith(`${name}/`))
         }
     }
 });

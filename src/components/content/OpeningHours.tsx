@@ -1,22 +1,14 @@
 import type { Location, LocationOpeningHours, OpeningHoursDaysDay, OpeningHoursDaysDaySlot } from 'src/types';
-import {
-    Table,
-    TableHeader,
-    TableColumn,
-    TableBody,
-    TableRow,
-    getKeyValue,
-    TableCell,
-    TableProps
-} from '@nextui-org/react';
+import { Table } from '@heroui/react';
+import type { ComponentProps } from 'react';
 import { startOfWeek, addDays } from 'date-fns';
 import { useMemo } from 'react';
 import { isSlotOpen } from '.';
 import { localeMap } from 'src/utils/helpers';
-import { zonedTimeToUtc, utcToZonedTime, format, formatInTimeZone } from "date-fns-tz";
-import nl from 'date-fns/locale/nl'
+import { formatInTimeZone } from 'date-fns-tz';
+import { nl } from 'date-fns/locale';
 
-export interface OpeningHoursProps extends TableProps {
+export interface OpeningHoursProps extends ComponentProps<typeof Table> {
     location: Location<LocationOpeningHours>;
     locale?: string;
     region?: string;
@@ -85,6 +77,7 @@ const OpeningHours = ({
             })
             .map(([key, day]) => {
                 return {
+                    id: key,
                     key: key,
                     day: getFullDayName(parseInt(key), locale, region),
                     time: getTime(day, labelClosed, labelHour, locale)
@@ -95,10 +88,12 @@ const OpeningHours = ({
     const columns = useMemo(() => {
         return [
             {
+                id: 'day',
                 key: 'day',
                 label: labelDay
             },
             {
+                id: 'time',
                 key: 'time',
                 label: labelTime
             }
@@ -124,11 +119,25 @@ const OpeningHours = ({
     }
 
     return (
-        <Table {...props} selectedKeys={selectedKeys} selectionMode='single' color='primary' aria-label={labelDay}>
-            <TableHeader columns={columns}>{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}</TableHeader>
-            <TableBody items={rows}>
-                {(item) => <TableRow key={item.key}>{(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}</TableRow>}
-            </TableBody>
+        <Table {...props}>
+            <Table.ScrollContainer>
+                <Table.Content aria-label={labelDay} selectionMode="single" selectedKeys={selectedKeys}>
+                    <Table.Header columns={columns}>
+                        {(column) => (
+                            <Table.Column id={column.id} isRowHeader={column.id === 'day'}>
+                                {column.label}
+                            </Table.Column>
+                        )}
+                    </Table.Header>
+                    <Table.Body items={rows}>
+                        {(item) => (
+                            <Table.Row id={item.id} columns={columns}>
+                                {(column) => <Table.Cell>{item[column.id as 'day' | 'time']}</Table.Cell>}
+                            </Table.Row>
+                        )}
+                    </Table.Body>
+                </Table.Content>
+            </Table.ScrollContainer>
         </Table>
     );
 };

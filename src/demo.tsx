@@ -1,5 +1,4 @@
 //@ts-nocheck
-import { NextUIProvider } from '@nextui-org/react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
 import { LocationFinderProvider } from './contexts/LocationFinderContext';
@@ -91,7 +90,7 @@ const Demo = () => {
     };
 
     return (
-        <NextUIProvider>
+        <>
             {!isLoaded && <div style={{ padding: '20px' }}>Loading Google Maps...</div>}
             {isLoaded && (
                 <LocationFinderProvider loading={!isLoaded} locations={locations} useCurrentLocation={true}>
@@ -104,7 +103,7 @@ const Demo = () => {
                     />
                 </LocationFinderProvider>
             )}
-        </NextUIProvider>
+        </>
     );
 };
 

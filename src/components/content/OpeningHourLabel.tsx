@@ -1,9 +1,9 @@
-import { Chip, ChipProps } from '@nextui-org/react';
+import { Chip, type ChipProps } from '@heroui/react';
 import { format, isAfter, addDays, isBefore, startOfWeek } from 'date-fns';
 import { useMemo } from 'react';
 import type { Location, LocationOpeningHours, OpeningHoursDaysDaySlot } from 'src/types';
 
-export interface OpeningHourLabelProps extends ChipProps {
+export interface OpeningHourLabelProps extends Omit<ChipProps, "children"> {
     location: Location<LocationOpeningHours>;
     labelClosed?: string;
     labelOpenTill?: string;
@@ -63,7 +63,8 @@ const OpeningHourLabel = ({
 
     if (!open || !location.openingHours) {
         return (
-            <Chip className="border" size="sm" color="danger" variant="dot" {...props}>
+            <Chip className="border" size="sm" color="danger" variant="soft" {...props}>
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {labelClosed}
             </Chip>
         );
@@ -71,7 +72,8 @@ const OpeningHourLabel = ({
 
     if (isAfter(date, open.from)) {
         return (
-            <Chip className="border" size="sm" color="success" variant="dot" {...props}>
+            <Chip className="border" size="sm" color="success" variant="soft" {...props}>
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {labelOpenTill} {format(open.to, 'HH:mm')}
             </Chip>
         );
@@ -79,14 +81,16 @@ const OpeningHourLabel = ({
 
     if (isBefore(date, open.from)) {
         return (
-            <Chip className="border" size="sm" color="success" variant="dot" {...props}>
+            <Chip className="border" size="sm" color="success" variant="soft" {...props}>
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {labelOpenFrom} {format(open.from, 'HH:mm')}
             </Chip>
         );
     }
 
     return (
-        <Chip className="border" size="sm" color="danger" variant="dot" {...props}>
+        <Chip className="border" size="sm" color="danger" variant="soft" {...props}>
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
             {labelClosed}
         </Chip>
     );
