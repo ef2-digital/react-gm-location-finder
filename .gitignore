@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 
 storybook-static
+# Local agent settings
+CLAUDE.local.md
+AGENTS.local.md
+.claude/settings.local.json
+.claude/worktrees/
