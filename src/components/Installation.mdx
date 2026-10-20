@@ -4,7 +4,7 @@ import { Meta, Source } from '@storybook/blocks';
 <Meta title="Installation" />
 
 ## Provider Setup
-It is essential to add the `LocationFinderProvider` at the root of your application. This will provide the `useLocationFinder` hook to all of your components. This library uses HeroUI 3 for some components: install `@heroui/react` and load its styles in your Tailwind 4 stylesheet with `@import "@heroui/styles";`, plus an `@source` line for this package.
+It is essential to add the `LocationFinderProvider` at the root of your application. This will provide the `useLocationFinder` hook to all of your components. This library uses HeroUI 3 and Tailwind 4. The README lists the packages to install and the three lines the consumer's stylesheet needs.
 <Source code={`
 // 1. import the LocationFinderProvider component.
 import { LocationFinderProvider } from '@ef2/react-gm-location-finder';
