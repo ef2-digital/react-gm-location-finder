@@ -8,7 +8,8 @@ published to npm as `@ef2/react-gm-location-finder`. The NAPA multidomain site
 
 Yarn 4 through Corepack (`packageManager` in `package.json`, `nodeLinker: node-modules` in
 `.yarnrc.yml`). A plain Yarn 1 refuses to run here, and a Yarn 1 install rewrites `yarn.lock` into
-the v1 format, which Yarn 4 then rejects. Vite 8 needs Node 20.19 or newer.
+the v1 format, which Yarn 4 then rejects. `yarn.lock` is the only lockfile; `package-lock.json` and
+`.yarn/install-state.gz` are ignored. Vite 8 needs Node 20.19 or newer.
 
 ```bash
 corepack yarn install
@@ -30,11 +31,10 @@ Since 2.0.0 the peers are React 19 and HeroUI 3 (`@heroui/react`), styled with T
 
 ## Consumers
 
-- The components use Tailwind classes that the consumer generates. Its CSS has to scan this
-  package, `@source '../node_modules/@ef2/react-gm-location-finder/dist';`, and import
-  `@heroui/styles`. Without the `@source` line the classes silently do not exist.
-- `exports` carries a `types` condition; without it a consumer on `moduleResolution: bundler`
-  sees the package as untyped.
+`README.md` is what npm shows: it lists the packages a consumer installs, the three stylesheet lines
+(without the `@source` line the classes silently do not exist) and what changed for 1.x users.
+Keep it in step with `package.json` when peers change. `exports` carries a `types` condition;
+without it a consumer on `moduleResolution: bundler` sees the package as untyped.
 
 ## Proving a change
 
