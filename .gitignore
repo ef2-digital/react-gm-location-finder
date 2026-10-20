@@ -30,3 +30,7 @@ CLAUDE.local.md
 AGENTS.local.md
 .claude/settings.local.json
 .claude/worktrees/
+
+# Yarn 4 is the package manager: yarn.lock is the only lockfile, and the install state is a local cache.
+package-lock.json
+.yarn/install-state.gz
