@@ -8,6 +8,7 @@ import { localeMap } from 'src/utils/helpers';
 import { formatInTimeZone } from 'date-fns-tz';
 import { nl } from 'date-fns/locale';
 
+/** Props on the root go to the wrapper around the table; contentProps go to the table itself. */
 export interface OpeningHoursProps extends ComponentProps<typeof Table> {
     location: Location<LocationOpeningHours>;
     locale?: string;
@@ -16,6 +17,8 @@ export interface OpeningHoursProps extends ComponentProps<typeof Table> {
     labelDay?: string;
     labelHour?: string;
     labelTime?: string;
+    /** Props for the table element itself (Table.Content), such as aria-label or onSelectionChange. */
+    contentProps?: Omit<ComponentProps<typeof Table.Content>, 'children'>;
 }
 
 const timezone = 'Europe/Amsterdam';
@@ -54,6 +57,7 @@ const OpeningHours = ({
     labelDay = 'Openingstijden',
     labelHour = 'uur',
     labelTime = '',
+    contentProps,
     ...props
 }: OpeningHoursProps) => {
     if (!location.openingHours) {
@@ -121,7 +125,7 @@ const OpeningHours = ({
     return (
         <Table {...props}>
             <Table.ScrollContainer>
-                <Table.Content aria-label={labelDay} selectionMode="single" selectedKeys={selectedKeys}>
+                <Table.Content aria-label={labelDay} selectionMode="single" selectedKeys={selectedKeys} {...contentProps}>
                     <Table.Header columns={columns}>
                         {(column) => (
                             <Table.Column id={column.id} isRowHeader={column.id === 'day'}>
