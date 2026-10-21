@@ -8,7 +8,7 @@
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "module": "ESNext",
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
@@ -17,9 +17,9 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "declarationMap": false,
-        "baseUrl": ".",
         "paths": {
-            "react-gm-location-finder": ["src/component/index.ts"]
+            "src/*": ["./src/*"],
+            "react-gm-location-finder": ["./src/component/index.ts"]
         },
         "typeRoots": ["node_modules/@types", "src/component/index.d.ts"]
     },
